@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trilha PSW - Dia 04: Fetch API & GitHub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <h1>Trilha PSW - Dia 04</h1>
+        <p>Buscador de Perfis via API do GitHub</p>
+    </header>
+
+    <main class="container">
+        <!-- Formulário de Busca -->
+        <section class="search-box">
+            <input type="text" id="username-input" placeholder="Digite o usuário do GitHub (ex: torvalds)" />
+            <button id="search-btn">Buscar</button>
+        </section>
+
+        <!-- Mensagem de Carregamento / Erro -->
+        <div id="status-message" class="status"></div>
+
+        <!-- Container onde o perfil será renderizado dinamicamente -->
+        <section id="profile-card" class="profile-card hidden">
+            <img id="avatar" src="" alt="Foto de perfil">
+            <div class="profile-info">
+                <h2 id="name"></h2>
+                <p id="bio" class="bio"></p>
+                <div class="stats">
+                    <span><strong>Repositórios:</strong> <span id="repos">0</span></span>
+                    <span><strong>Seguidores:</strong> <span id="followers">0</span></span>
+                </div>
+                <a id="profile-link" href="#" target="_blank" rel="noopener">Ver Perfil Completo</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Projeto de Software para Web &copy; 2026</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
