@@ -14,12 +14,62 @@ const saintPatron = document.querySelector('#saint-patron');
 const saintBio = document.querySelector('#saint-bio');
 const saintQuote = document.querySelector('#saint-quote');
 
-// Função que faz o fetch do arquivo JSON local e busca o santo desejado
+// Função que faz o fetch do arquivo JSON e busca o santo
 async function buscarSanto(termoBusca) {
     if (!termoBusca) {
         statusMessage.textContent = 'Por favor, digite o nome de um santo.';
         return;
     }
+
+    statusMessage.textContent = 'Buscando registros na biblioteca...';
+    saintCard.classList.add('hidden');
+
+    try {
+        // Garantimos o caminho relativo correto do arquivo santos.json
+        const resposta = await fetch('./santos.json');
+        
+        // Se o arquivo não for encontrado no servidor (Erro 404)
+        if (!resposta.ok) {
+            throw new Error(`Erro ao carregar o arquivo santos.json (Status: ${resposta.status})`);
+        }
+
+        const listaDeSantos = await resposta.json();
+
+        // Limpa o termo de busca (remove espaços extras)
+        const termoLimpo = termoBusca.trim().toLowerCase();
+
+        // Busca aproximada no nome ou id do santo
+        const santoEncontrado = listaDeSantos.find(santo => {
+            const nomeSanto = santo.nome.toLowerCase();
+            const idSanto = santo.id.toLowerCase();
+            return nomeSanto.includes(termoLimpo) || idSanto.includes(termoLimpo);
+        });
+
+        if (!santoEncontrado) {
+            throw new Error(`Nenhum santo encontrado para "${termoBusca}". Tente digitar: Agostinho, Francisco, Teresa ou Tomás.`);
+        }
+
+        // Preenche os dados no HTML
+        saintImg.src = santoEncontrado.imagem;
+        saintName.textContent = santoEncontrado.nome;
+        saintTitle.textContent = santoEncontrado.titulo;
+        saintDate.textContent = santoEncontrado.dataFestiva;
+        saintPeriod.textContent = santoEncontrado.periodo;
+        saintPatron.textContent = santoEncontrado.padroeiro;
+        saintBio.textContent = santoEncontrado.biografia;
+        saintQuote.textContent = `"${santoEncontrado.frase}"`;
+
+        // Exibe o card
+        statusMessage.textContent = '';
+        saintCard.classList.remove('hidden');
+
+    } catch (erro) {
+        // Exibe a mensagem exata do erro na tela do usuário
+        statusMessage.textContent = erro.message;
+        console.error('Detalhe do Erro:', erro);
+    }
+}
+
 
     statusMessage.textContent = 'Buscando registros na biblioteca...';
     saintCard.classList.add('hidden');
