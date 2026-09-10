@@ -25,85 +25,54 @@ async function buscarSantoWikipedia(termoBusca) {
     if (saintCard) saintCard.classList.add('hidden');
 
     try {
-        // Pesquisa na Wikipedia buscando exatamente pelo nome digitado
-        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termo)}&format=json&origin=*`;
+        // Usa a busca avançada da Wikipedia filtrando OBRIGATORIAMENTE por categorias hagiográficas
+        // O operando incategory: garante que a Wikipedia só busque dentro dos acervos religiosos
+        const queryFiltro = `"${termo}" (incategory:"Santos" OR incategory:"Santas" OR incategory:"Santos católicos" OR incategory:"Santas católicas" OR incategory:"Beatos" OR incategory:"Papas")`;
+        
+        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(queryFiltro)}&format=json&origin=*`;
         
         const searchResponse = await fetch(searchUrl);
         if (!searchResponse.ok) throw new Error(`Erro de conexão (Status: ${searchResponse.status})`);
 
         const searchData = await searchResponse.json();
+
+        // Se a Wikipedia não encontrar o termo DENTRO das categorias de Santos, dá erro de imediato!
         if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
-            throw new Error(`Nenhum resultado encontrado para "${termo}".`);
+            throw new Error(`"${termo}" não foi encontrado no acervo de Santos e Santas da Wikipedia.`);
         }
 
-        // Analisa os primeiros resultados retornados pela Wikipedia
-        const resultados = searchData.query.search.slice(0, 5);
-        let artigoValido = null;
+        // Pega o primeiro artigo garantido pela própria Wikipedia como integrante da Categoria Santos
+        const tituloExato = searchData.query.search[0].title;
 
-        // Palavras obrigatórias no contexto católico/sagrado
-        const palavrasObrigatorias = [
-            'católic', 'canonizad', 'beatificad', 'mártir', 'virgem',
-            'litúrgic', 'hagiograf', 'doutor da igreja', 'santa sé',
-            'igreja católica', 'festa litúrgica'
-        ];
+        // ETAPA 2: Carrega o conteúdo do artigo validado
+        const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(tituloExato)}&format=json&origin=*`;
+        
+        const summaryResponse = await fetch(summaryUrl);
+        if (!summaryResponse.ok) throw new Error(`Erro ao carregar detalhes do artigo.`);
 
-        for (const item of resultados) {
-            const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
-            
-            const summaryResponse = await fetch(summaryUrl);
-            if (!summaryResponse.ok) continue;
+        const summaryData = await summaryResponse.json();
+        const pages = summaryData.query.pages;
+        const pageId = Object.keys(pages)[0];
 
-            const summaryData = await summaryResponse.json();
-            const pages = summaryData.query.pages;
-            const pageId = Object.keys(pages)[0];
+        if (pageId === "-1") throw new Error('Artigo não encontrado.');
 
-            if (pageId === "-1") continue;
+        const artigo = pages[pageId];
 
-            const artigo = pages[pageId];
-            const tituloLower = artigo.title.toLowerCase();
-            const extractLower = (artigo.extract || '').toLowerCase();
-
-            // BLOQUEIO DIRETO: Se o título contiver clube, futebol ou cidade
-            if (tituloLower.includes('futebol') || tituloLower.includes('clube') || tituloLower.includes('município')) {
-                continue;
-            }
-
-            // REGRA PRINCIPAL: O resumo da página TEM QUE conter pelo menos uma palavra católica/sagrada
-            const ehCatolicoOuSanto = palavrasObrigatorias.some(palavra => extractLower.includes(palavra));
-
-            // Além disso, aceita se o título começar explicitamente com São, Santo ou Santa
-            const ehTituloDeSanto = tituloLower.startsWith('santo ') || 
-                                    tituloLower.startsWith('santa ') || 
-                                    tituloLower.startsWith('são ') || 
-                                    tituloLower.includes('(santo)') || 
-                                    tituloLower.includes('(santa)');
-
-            if (ehCatolicoOuSanto || ehTituloDeSanto) {
-                artigoValido = artigo;
-                break; // Achou um Santo/Santa legítimo!
-            }
-        }
-
-        // Se nenhum dos resultados for um Santo ou Santa
-        if (!artigoValido) {
-            throw new Error(`"${termo}" não é um Santo ou Santa católico reconhecido na Wikipedia.`);
-        }
-
-        // Exibe os dados do Santo validado na tela
-        setTexto(saintName, artigoValido.title);
-        setTexto(saintBio, artigoValido.extract || 'Nenhum resumo em texto disponível para este artigo.');
+        // ETAPA 3: Renderização no DOM
+        setTexto(saintName, artigo.title);
+        setTexto(saintBio, artigo.extract || 'Nenhum resumo disponível.');
 
         if (saintImg) {
-            if (artigoValido.original && artigoValido.original.source) {
-                saintImg.src = artigoValido.original.source;
+            if (artigo.original && artigo.original.source) {
+                saintImg.src = artigo.original.source;
                 saintImg.style.display = 'block';
             } else {
                 saintImg.style.display = 'none';
             }
         }
 
-        if (saintLink && artigoValido.fullurl) {
-            saintLink.href = artigoValido.fullurl;
+        if (saintLink && artigo.fullurl) {
+            saintLink.href = artigo.fullurl;
         }
 
         setTexto(statusMessage, '');
