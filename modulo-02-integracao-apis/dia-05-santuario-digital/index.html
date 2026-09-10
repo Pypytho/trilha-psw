@@ -3,59 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Santuário Digital - História dos Santos (Wikipedia API)</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Busca de Santos</title>
+    <!-- CDN do Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.min.js"></script>
+    <style>
+        .hidden { display: none !important; }
+        .chip { cursor: pointer; padding: 6px 12px; background: #eee; border-radius: 16px; display: inline-block; margin: 4px; }
+        #saint-card { border: 1px solid #ccc; padding: 16px; margin-top: 16px; border-radius: 8px; }
+        #saint-img { max-width: 200px; display: block; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
-    <header class="navbar">
-        <h1>Santuário Digital</h1>
-        <p>Hagiografia e História dos Santos via API da Wikipedia</p>
-    </header>
 
-    <main class="container">
-        <!-- Campo de Busca -->
-        <section class="search-box">
-            <input type="text" id="saint-input" placeholder="Digite o nome de qualquer santo (ex: Bento, Rita de Cássia)..." />
-            <button id="search-btn">Buscar Santo</button>
-        </section>
+    <div>
+        <input type="text" id="saint-input" placeholder="Digite o nome...">
+        <button type="button" id="search-btn">Pesquisar</button>
+    </div>
 
-        <!-- Botões de Acesso Rápido -->
-        <section class="quick-links">
-            <span>Sugestões:</span>
-            <button class="chip" data-name="Santo Agostinho">Santo Agostinho</button>
-            <button class="chip" data-name="São Francisco de Assis">São Francisco</button>
-            <button class="chip" data-name="Santa Teresa de Ávila">Santa Teresa</button>
-            <button class="chip" data-name="São Bento de Núrsia">São Bento</button>
-        </section>
+    <div>
+        <span class="chip" data-name="São Francisco de Assis">São Francisco</span>
+        <span class="chip" data-name="Santo Agostinho">Santo Agostinho</span>
+        <span class="chip" data-name="Santa Rita de Cássia">Santa Rita</span>
+    </div>
 
-        <!-- Mensagem de Status / Erro -->
-        <div id="status-message" class="status"></div>
+    <p id="status-message"></p>
 
-        <!-- Exibição do Perfil do Santo da Wikipedia -->
-        <article id="saint-card" class="saint-card hidden">
-            <div class="saint-header">
-                <img id="saint-img" src="" alt="Imagem do Santo">
-                <div class="saint-header-info">
-                    <h2 id="saint-name"></h2>
-                    <span class="badge">Fonte: Wikipedia</span>
-                </div>
-            </div>
+    <div id="saint-card" class="hidden">
+        <h2 id="saint-name"></h2>
+        <img id="saint-img" src="" alt="Imagem" style="display: none;">
+        <p id="saint-bio"></p>
+        <a id="saint-link" href="#" target="_blank">Ver na Wikipédia</a>
+    </div>
 
-            <div class="saint-body">
-                <h3>Resumo Histórico</h3>
-                <p id="saint-bio" class="bio-text"></p>
-                
-                <div class="actions">
-                    <a id="saint-link" href="#" target="_blank" rel="noopener" class="wiki-btn">Ler artigo completo na Wikipedia →</a>
-                </div>
-            </div>
-        </article>
-    </main>
-
-    <footer class="footer">
-        <p>Projeto de Software para Web &copy; 2026 - Módulo 02</p>
-    </footer>
-
-    <script src="script.js?v=6.0"></script>
+    <script src="script.js?v=7.0"></script>
 </body>
 </html>
