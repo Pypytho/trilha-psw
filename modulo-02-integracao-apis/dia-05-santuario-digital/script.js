@@ -1,3 +1,6 @@
+// Coloque isto na topo do script.js para confirmar o carregamento no F12
+console.log(">>> CÓDIGO NOVO CARREGADO COM SUCESSO <<<");
+
 document.addEventListener('DOMContentLoaded', () => {
     const saintInput = document.querySelector('#saint-input');
     const searchBtn = document.querySelector('#search-btn');
@@ -14,11 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elemento) elemento.textContent = texto;
     }
 
-    // SEGUNDA CHECAGEM (CHECAGEM DA PÁGINA):
-    // O texto da Wikipédia OBRIGATORIAMENTE precisa conter ao menos UM destes termos específicos
+    // PALAVRAS-CHAVE EXCLUSIVAS DE CANONIZAÇÃO
     const TERMOS_CANONIZACAO = [
-        'beatificad',      // pega beatificado, beatificada, beatificação
-        'canonizad',      // pega canonizado, canonizada, canonização
+        'beatificad',      // beatificado, beatificada, beatificação
+        'canonizad',      // canonizado, canonizada, canonização
         'papa da igreja', 
         'santo católico', 
         'santa católica', 
@@ -28,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'festa litúrgica'
     ];
 
-    // BLOQUEIO ABSOLUTO DE TERMOS SECULARES OU ESPORTIVOS
+    // TERMOS QUE CANCELAM O RESULTADO INSTANTANEAMENTE
     const TERMOS_PROIBIDOS = [
         'futebol', 'clube', 'esporte', 'estádio', 'município', 'prefeitura',
         'físico', 'nobel', 'física', 'cientista', 'relatividade', 'televisão',
@@ -42,13 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const termo = termoBusca.trim();
-        setTexto(statusMessage, 'Pesquisando e realizando dupla checagem...');
+        setTexto(statusMessage, 'Pesquisando no acervo...');
         if (saintCard) saintCard.classList.add('hidden');
 
         try {
             const termoLower = termo.toLowerCase();
 
-            // 1. PRIMEIRA CHECAGEM: Pesquisa na Wikipédia priorizando hagiografia
+            // 1. PRIMEIRA CHECAGEM: Força a busca hagiográfica se o usuário não digitou o prefixo
             let queryBusca = termo;
             if (!termoLower.startsWith('são ') && !termoLower.startsWith('santo ') && !termoLower.startsWith('santa ') && !termoLower.startsWith('beato ') && !termoLower.startsWith('beata ')) {
                 queryBusca = `Santo ${termo}`;
@@ -63,11 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Nenhum resultado encontrado para "${termo}".`);
             }
 
-            // Pega os 5 primeiros resultados
             const resultados = searchData.query.search.slice(0, 5);
             let artigoAprovado = null;
 
-            // 2. SEGUNDA CHECAGEM (Verificação rigorosa na página encontrada)
+            // 2. SEGUNDA CHECAGEM: Validação estrita do texto da página
             for (const item of resultados) {
                 const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
                 const summaryResponse = await fetch(summaryUrl);
@@ -83,28 +84,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tituloLower = artigo.title.toLowerCase();
                 const extractLower = (artigo.extract || '').toLowerCase();
 
-                // Passo A: Se tiver qualquer termo secular (futebol, físico, nobel), REPROVA
+                // Checagem Anti-Falso-Positivo
                 const ehSecular = TERMOS_PROIBIDOS.some(proibido => 
                     tituloLower.includes(proibido) || extractLower.includes(proibido)
                 );
 
-                if (ehSecular) {
-                    continue; // Pula para o próximo artigo sem aprovar
-                }
+                if (ehSecular) continue;
 
-                // Passo B: Checagem exata da página por palavras de canonização/veneração
+                // Checagem Obrigatoria de Canonização / Papa / Beatificado
                 const ehValidoPorCanonizacao = TERMOS_CANONIZACAO.some(termoSacro => 
                     extractLower.includes(termoSacro)
                 );
 
-                // Se passou no Passo A e no Passo B, o artigo é aprovado!
                 if (ehValidoPorCanonizacao) {
                     artigoAprovado = artigo;
                     break;
                 }
             }
 
-            // Se nenhum dos artigos passou na Segunda Checagem:
             if (!artigoAprovado) {
                 throw new Error(`"${termo}" não foi validado como Santo, Papa ou figura beatificada no acervo.`);
             }
