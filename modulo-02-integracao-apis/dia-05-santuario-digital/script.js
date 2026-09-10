@@ -14,30 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elemento) elemento.textContent = texto;
     }
 
-    // Categorias Oficiais e Específicas da Wikipédia que definem uma figura canonizada/venerada
-    const CATEGORIAS_RELIGIOSAS_ESTRITAS = [
-        'santos católicos',
-        'santas católicas',
-        'santos da',
-        'santas da',
-        'santos do',
-        'santas do',
-        'santos de',
-        'santas de',
-        'papas',
-        'beatos católicos',
-        'beatas católicas',
-        'doutores da igreja',
-        'mártires católicos',
-        'santos canonizados'
-    ];
-
-    // Termos que FORÇAM o descarte imediato (futebol, geografia, ciência secular, etc.)
-    const TERMOS_DESCARTE = [
-        'futebol', 'clube', 'esporte', 'estádio', 'município', 'estado do brasil', 
-        'prefeitura', 'físico', 'nobel', 'física', 'cientista', 'televisão', 
-        'associação', 'campeonato', 'empresa', 'político'
-    ];
+    // Termos que indicam se um título/categoria é estritamente religioso
+    const PREFIXOS_SANTO = ['são ', 'santo ', 'santa ', 'beato ', 'beata '];
 
     async function buscarSantoWikipedia(termoBusca) {
         if (!termoBusca || !termoBusca.trim()) {
@@ -46,97 +24,79 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const termo = termoBusca.trim();
-        setTexto(statusMessage, 'Pesquisando no acervo de santos e santas...');
+        setTexto(statusMessage, 'Consultando o acervo de santos...');
         if (saintCard) saintCard.classList.add('hidden');
 
         try {
             const termoLower = termo.toLowerCase();
 
-            // Para otimizar a busca na Wikipédia e não trazer seculares primeiro, 
-            // prefixamos "Santo " se a pessoa digitou apenas o nome (ex: "Agostinho" -> "Santo Agostinho")
-            let queryPesquisa = termo;
-            if (!termoLower.startsWith('são ') && !termoLower.startsWith('santo ') && !termoLower.startsWith('santa ') && !termoLower.startsWith('beato ') && !termoLower.startsWith('beata ')) {
-                queryPesquisa = `Santo ${termo}`;
+            // 1. Monta os termos de busca para localizar o artigo correto
+            let buscaExata = termo;
+            if (!PREFIXOS_SANTO.some(p => termoLower.startsWith(p))) {
+                buscaExata = `Santo ${termo}`;
             }
 
-            // 1. Busca os 5 artigos mais relevantes na Wikipédia
-            const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(queryPesquisa)}&format=json&origin=*`;
-            const searchResponse = await fetch(searchUrl);
-            if (!searchResponse.ok) throw new Error(`Falha de conexão com a Wikipedia.`);
+            // 2. Busca na API focando apenas em categorias e páginas de Santos Católicos
+            // Usamos a busca da MediaWiki restringindo o escopo com o namespace de artigos
+            const endpointUrl = `https://pt.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(buscaExata)}&gsrnamespace=0&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=50&format=json&origin=*`;
 
-            const searchData = await searchResponse.json();
-            if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
-                throw new Error(`Nenhum artigo encontrado para "${termo}".`);
+            const response = await fetch(endpointUrl);
+            if (!response.ok) throw new Error('Erro na conexão com a Wikipédia.');
+
+            const data = await response.json();
+
+            if (!data.query || !data.query.pages) {
+                throw new Error(`Nenhum registro de santo encontrado para "${termo}".`);
             }
 
-            const resultados = searchData.query.search.slice(0, 5);
-            let artigoEncontrado = null;
+            const paginas = Object.values(data.query.pages);
+            let artigoValido = null;
 
-            for (const item of resultados) {
-                // 2. Para cada artigo, busca os dados e as CATEGORIAS oficiais indexadas na Wikipédia
-                const detailsUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=100&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
-                const detailsResponse = await fetch(detailsUrl);
-                if (!detailsResponse.ok) continue;
+            // 3. Validação rígida: o artigo DEVE ter categoria explícita de santidade
+            for (const pagina of paginas) {
+                const tituloLower = pagina.title.toLowerCase();
+                const categorias = pagina.categories ? pagina.categories.map(c => c.title.toLowerCase()) : [];
 
-                const detailsData = await detailsResponse.json();
-                const pages = detailsData.query.pages;
-                const pageId = Object.keys(pages)[0];
-
-                if (pageId === "-1") continue;
-
-                const artigo = pages[pageId];
-                const tituloLower = artigo.title.toLowerCase();
-
-                // Extrai o nome de todas as categorias do artigo
-                const categorias = artigo.categories 
-                    ? artigo.categories.map(c => c.title.toLowerCase()) 
-                    : [];
-
-                // FILTRO 1: Descarte imediato se contiver qualquer termo secular proibido no título ou categorias
-                const ehSecularOuEsporte = TERMOS_DESCARTE.some(t => 
-                    tituloLower.includes(t) || categorias.some(c => c.includes(t))
+                // Verifica se tem categorias oficiais da Wikipedia para figuras canonizadas/veneradas
+                const temCategoriaSanto = categorias.some(cat => 
+                    cat.includes('santos') || 
+                    cat.includes('santas') || 
+                    cat.includes('beatos') || 
+                    cat.includes('beatas') || 
+                    cat.includes('papas') || 
+                    cat.includes('doutores da igreja') ||
+                    cat.includes('mártires católicos')
                 );
 
-                if (ehSecularOuEsporte) {
-                    continue; // Pula Einstein, clubes, cidades, etc.
-                }
+                // Garante que o título não é uma página de desambiguação, cidade ou clube
+                const ehDesambiguacaoOuSecular = tituloLower.includes('desambiguação') || 
+                                                categorias.some(c => c.includes('futebol') || c.includes('municípios') || c.includes('físicos'));
 
-                // FILTRO 2: Validação estrita por categoria de santidade
-                // Checa se pelo menos UMA das categorias do artigo bate com as categorias de santos católicos
-                const ehSantoEstrito = categorias.some(cat => 
-                    CATEGORIAS_RELIGIOSAS_ESTRITAS.some(regra => cat.includes(regra))
-                );
-
-                // Validação secundária: se o título começar explicitamente com São, Santo ou Santa
-                // E NÃO for desambiguação
-                const ehSantoPorTitulo = (tituloLower.startsWith('são ') || tituloLower.startsWith('santo ') || tituloLower.startsWith('santa ')) && 
-                                         !tituloLower.includes('desambiguação');
-
-                if (ehSantoEstrito || ehSantoPorTitulo) {
-                    artigoEncontrado = artigo;
-                    break; // Artigo legítimo de Santo Católico encontrado!
+                if (temCategoriaSanto && !ehDesambiguacaoOuSecular) {
+                    artigoValido = pagina;
+                    break;
                 }
             }
 
-            if (!artigoEncontrado) {
-                throw new Error(`"${termo}" não corresponde a um Santo, Santa ou figura canonizada reconhecida.`);
+            if (!artigoValido) {
+                throw new Error(`"${termo}" não foi encontrado como Santo ou Santa no acervo.`);
             }
 
-            // 3. Renderização
-            setTexto(saintName, artigoEncontrado.title);
-            setTexto(saintBio, artigoEncontrado.extract || 'Nenhum resumo em texto disponível.');
+            // 4. Renderização dos dados validados
+            setTexto(saintName, artigoValido.title);
+            setTexto(saintBio, artigoValido.extract || 'Resumo não disponível.');
 
             if (saintImg) {
-                if (artigoEncontrado.original && artigoEncontrado.original.source) {
-                    saintImg.src = artigoEncontrado.original.source;
+                if (artigoValido.original && artigoValido.original.source) {
+                    saintImg.src = artigoValido.original.source;
                     saintImg.style.display = 'block';
                 } else {
                     saintImg.style.display = 'none';
                 }
             }
 
-            if (saintLink && artigoEncontrado.fullurl) {
-                saintLink.href = artigoEncontrado.fullurl;
+            if (saintLink && artigoValido.fullurl) {
+                saintLink.href = artigoValido.fullurl;
             }
 
             setTexto(statusMessage, '');
