@@ -10,9 +10,9 @@ const saintName = document.querySelector('#saint-name');
 const saintBio = document.querySelector('#saint-bio');
 const saintLink = document.querySelector('#saint-link');
 
-// Função assíncrona que faz requisição à API REST da Wikipedia
+// Função assíncrona para buscar na API da Wikipedia
 async function buscarSantoWikipedia(termoBusca) {
-    if (!termoBusca) {
+    if (!termoBusca || !termoBusca.trim()) {
         statusMessage.textContent = 'Por favor, digite o nome de um santo.';
         return;
     }
@@ -20,27 +20,32 @@ async function buscarSantoWikipedia(termoBusca) {
     statusMessage.textContent = 'Buscando registros na Wikipedia...';
     saintCard.classList.add('hidden');
 
-    // Formata o termo de busca: substitui espaços por sublinhados (padrão de URLs da Wikipedia)
-    const termoFormatado = encodeURIComponent(termoBusca.trim().replace(/ /g, '_'));
+    // Formatação correta da URL mantendo o underline visível para a Wikipedia
+    const termoTratado = termoBusca.trim().replace(/\s+/g, '_');
+    const termoFinal = encodeURIComponent(termoTratado).replace(/%5FB/g, '_');
 
     try {
-        // Endpoint REST oficial da Wikipedia para resumos de artigos em Português
-        const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${termoFormatado}`;
+        // Usa a API da Wikipedia aceitando redirecionamentos automáticos
+        const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${termoFinal}?redirect=true`;
         
         const resposta = await fetch(url);
 
-        // Se a página do artigo não existir na Wikipedia (Erro 404)
         if (!resposta.ok) {
-            throw new Error(`Não foi possível encontrar a página para "${termoBusca}". Tente digitar o nome completo, ex: "São Francisco de Assis".`);
+            throw new Error(`Não foi possível encontrar a página para "${termoBusca}". Tente o nome completo (ex: "Santo Agostinho" ou "São Francisco de Assis").`);
         }
 
         const data = await resposta.json();
 
-        // Injeta os dados retornados pela Wikipedia no DOM
+        // Se a página retornada for uma página de busca/desambiguação ou não tiver resumo
+        if (data.type === 'disambiguation') {
+            throw new Error(`O termo "${termoBusca}" é muito genérico. Tente especificar melhor o nome do santo.`);
+        }
+
+        // Injeta os dados retornados no DOM
         saintName.textContent = data.title;
-        saintBio.textContent = data.extract || 'Nenhum resumo em texto disponível para este artigo.';
+        saintBio.textContent = data.extract || 'Nenhum resumo disponível para este artigo.';
         
-        // Trata a imagem: se o artigo possuir imagem principal, exibe-a; senão, esconde o elemento <img>
+        // Exibe ou esconde a imagem
         if (data.thumbnail && data.thumbnail.source) {
             saintImg.src = data.thumbnail.source;
             saintImg.style.display = 'block';
@@ -48,12 +53,11 @@ async function buscarSantoWikipedia(termoBusca) {
             saintImg.style.display = 'none';
         }
 
-        // Define o link direto para a página completa do artigo na Wikipedia
+        // Link oficial para a página
         if (data.content_urls && data.content_urls.desktop) {
             saintLink.href = data.content_urls.desktop.page;
         }
 
-        // Limpa a mensagem de carregamento e exibe o cartão
         statusMessage.textContent = '';
         saintCard.classList.remove('hidden');
 
@@ -64,19 +68,17 @@ async function buscarSantoWikipedia(termoBusca) {
 
 // Escuta o clique no botão de busca
 searchBtn.addEventListener('click', () => {
-    const termo = saintInput.value;
-    buscarSantoWikipedia(termo);
+    buscarSantoWikipedia(saintInput.value);
 });
 
-// Escuta a tecla "Enter" no campo de texto
+// Escuta a tecla Enter
 saintInput.addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
-        const termo = saintInput.value;
-        buscarSantoWikipedia(termo);
+        buscarSantoWikipedia(saintInput.value);
     }
 });
 
-// Escuta os cliques nas sugestões rápidas
+// Escuta os cliques nos chips de sugestão rápida
 chips.forEach(chip => {
     chip.addEventListener('click', () => {
         const nomeSanto = chip.getAttribute('data-name');
