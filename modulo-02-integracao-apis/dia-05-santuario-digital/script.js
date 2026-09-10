@@ -14,17 +14,17 @@ function setTexto(elemento, texto) {
     if (elemento) elemento.textContent = texto;
 }
 
-// Termos que PROÍBEM a exibição do artigo
-const TERMOS_PROIBIDOS = [
-    'futebol', 'clube', 'esporte', 'estádio', 'município', 
-    'televisão', 'empresa', 'associação', 'série de televisão', 'campeonato'
-];
-
-// Termos que CONFIRMAM que se trata de uma figura sagrada/religiosa
+// Palavras que OBRIGATORIAMENTE indicam um artigo hagiográfico/religioso
 const TERMOS_SACROS = [
     'santo', 'santa', 'são', 'canonizad', 'beatificad', 'mártir', 
     'papa', 'bispo', 'virgem', 'doutor da igreja', 'igreja católica', 
-    'festa litúrgica', 'beato', 'beata', 'frade', 'monge', 'freira'
+    'festa litúrgica', 'beato', 'beata', 'frade', 'monge', 'freira', 'religios'
+];
+
+// Palavras que BLOQUEIAM o resultado para evitar times, cidades ou celebridades
+const TERMOS_PROIBIDOS = [
+    'futebol', 'clube', 'esporte', 'estádio', 'município', 'prefeitura',
+    'apresentador', 'televisão', 'empresa', 'associação', 'campeonato'
 ];
 
 async function buscarSantoWikipedia(termoBusca) {
@@ -34,107 +34,86 @@ async function buscarSantoWikipedia(termoBusca) {
     }
 
     const termo = termoBusca.trim();
-    setTexto(statusMessage, 'Pesquisando na biblioteca de santos...');
+    setTexto(statusMessage, 'Pesquisando no acervo de santos...');
     if (saintCard) saintCard.classList.add('hidden');
 
     try {
-        // 1. Gera lista de tentativas de títulos
         const termoLower = termo.toLowerCase();
-        let tentativas = [];
+        let queryBusca = '';
 
+        // Se o usuário já digitou São, Santo ou Santa
         if (termoLower.startsWith('são ') || termoLower.startsWith('santo ') || termoLower.startsWith('santa ') || termoLower.startsWith('beato ') || termoLower.startsWith('beata ')) {
-            tentativas = [termo];
+            queryBusca = termo;
         } else {
-            tentativas = [
-                `Santo ${termo}`,
-                `Santa ${termo}`,
-                `São ${termo}`,
-                `Beato ${termo}`,
-                `Beata ${termo}`,
-                termo
-            ];
+            // Adiciona "Santo" para forçar o algoritmo de relevância da Wikipedia a ranquear figuras sacras no topo
+            queryBusca = `Santo ${termo}`;
         }
 
+        // ETAPA 1: Busca de artigos usando a API Action da MediaWiki (livre de erros de rota 404)
+        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(queryBusca)}&format=json&origin=*`;
+        
+        const searchResponse = await fetch(searchUrl);
+        if (!searchResponse.ok) throw new Error(`Erro na conexão com a Wikipedia (Status: ${searchResponse.status})`);
+
+        const searchData = await searchResponse.json();
+
+        if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
+            throw new Error(`Nenhum registro encontrado para "${termo}".`);
+        }
+
+        // ETAPA 2: Analisa os 5 primeiros resultados para validar se algum é realmente um Santo
+        const resultados = searchData.query.search.slice(0, 5);
         let artigoValido = null;
 
-        // 2. Testa cada variação usando a REST API v1 da Wikipédia (muito mais precisa)
-        for (const tituloTentativa of tentativas) {
-            const urlRest = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(tituloTentativa)}`;
+        for (const item of resultados) {
+            // Requisita o resumo e os detalhes da página
+            const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
             
-            const response = await fetch(urlRest);
-            if (!response.ok) continue;
+            const summaryResponse = await fetch(summaryUrl);
+            if (!summaryResponse.ok) continue;
 
-            const data = await response.json();
+            const summaryData = await summaryResponse.json();
+            const pages = summaryData.query.pages;
+            const pageId = Object.keys(pages)[0];
 
-            // Ignora desambiguações ou páginas sem extrato
-            if (data.type === 'disambiguation' || !data.extract) continue;
+            if (pageId === "-1") continue;
 
-            const titulo = (data.title || '').toLowerCase();
-            const extract = (data.extract || '').toLowerCase();
-            const description = (data.description || '').toLowerCase();
+            const artigo = pages[pageId];
+            const tituloLower = artigo.title.toLowerCase();
+            const extractLower = (artigo.extract || '').toLowerCase();
 
-            // REGRA 1: Se contiver termos proibidos (futebol, clube, etc.) no título, resumo ou descrição -> BLOQUEIA
-            const ehProibido = TERMOS_PROIBIDOS.some(t => 
-                titulo.includes(t) || extract.includes(t) || description.includes(t)
-            );
-
+            // BLOQUEIO: Se o título ou o texto tiver termos de esporte/cidade/TV
+            const ehProibido = TERMOS_PROIBIDOS.some(t => tituloLower.includes(t) || extractLower.includes(t));
             if (ehProibido) continue;
 
-            // REGRA 2: Deve conter pelo menos uma evidência sacra no texto ou descrição
-            const ehSacro = TERMOS_SACROS.some(t => 
-                titulo.includes(t) || extract.includes(t) || description.includes(t)
-            );
+            // VALIDAÇÃO: Se tiver termos religiosos/católicos no título ou resumo
+            const ehSacro = TERMOS_SACROS.some(t => tituloLower.includes(t) || extractLower.includes(t));
 
             if (ehSacro) {
-                artigoValido = data;
-                break;
-            }
-        }
-
-        // 3. Se não achou via REST API, faz uma busca de socorro pelo opensearch
-        if (!artigoValido) {
-            const openSearchUrl = `https://pt.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent('Santo ' + termo)}&limit=1&format=json&origin=*`;
-            const osResponse = await fetch(openSearchUrl);
-            const osData = await osResponse.json();
-
-            if (osData && osData[1] && osData[1].length > 0) {
-                const tituloEncontrado = osData[1][0];
-                const urlRest = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(tituloEncontrado)}`;
-                const res = await fetch(urlRest);
-                if (res.ok) {
-                    const data = await res.json();
-                    const extract = (data.extract || '').toLowerCase();
-                    const description = (data.description || '').toLowerCase();
-                    
-                    const ehProibido = TERMOS_PROIBIDOS.some(t => extract.includes(t) || description.includes(t));
-                    const ehSacro = TERMOS_SACROS.some(t => extract.includes(t) || description.includes(t));
-
-                    if (!ehProibido && ehSacro) {
-                        artigoValido = data;
-                    }
-                }
+                artigoValido = artigo;
+                break; // Achou o santo! Sai do loop.
             }
         }
 
         if (!artigoValido) {
-            throw new Error(`"${termo}" não foi encontrado como Santo ou Santa. Digite um nome válido (ex: Agostinho, Rita, Bento, Expedito).`);
+            throw new Error(`"${termo}" não foi identificado como um Santo ou Santa no acervo.`);
         }
 
-        // 4. Exibe o resultado na tela
+        // ETAPA 3: Exibe os dados validados na tela
         setTexto(saintName, artigoValido.title);
-        setTexto(saintBio, artigoValido.extract);
+        setTexto(saintBio, artigoValido.extract || 'Nenhum resumo em texto disponível.');
 
         if (saintImg) {
-            if (artigoValido.thumbnail && artigoValido.thumbnail.source) {
-                saintImg.src = artigoValido.thumbnail.source;
+            if (artigoValido.original && artigoValido.original.source) {
+                saintImg.src = artigoValido.original.source;
                 saintImg.style.display = 'block';
             } else {
                 saintImg.style.display = 'none';
             }
         }
 
-        if (saintLink && artigoValido.content_urls && artigoValido.content_urls.desktop) {
-            saintLink.href = artigoValido.content_urls.desktop.page;
+        if (saintLink && artigoValido.fullurl) {
+            saintLink.href = artigoValido.fullurl;
         }
 
         setTexto(statusMessage, '');
