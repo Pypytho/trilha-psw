@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function buscarWikipedia(termoBusca) {
+        console.log("Iniciando busca para:", termoBusca);
+
         if (!termoBusca || !termoBusca.trim()) {
             setTexto(statusMessage, 'Por favor, digite um termo para buscar.');
             return;
@@ -25,24 +27,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (saintCard) saintCard.classList.add('hidden');
 
         try {
-            // 1. Busca o artigo correspondente na Wikipédia
+            // 1. Busca simples na API da Wikipédia
             const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termo)}&format=json&origin=*`;
             const searchResponse = await fetch(searchUrl);
-            if (!searchResponse.ok) throw new Error('Falha na conexão com a Wikipédia.');
-
             const searchData = await searchResponse.json();
+
             if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
                 throw new Error(`Nenhum resultado encontrado para "${termo}".`);
             }
 
             const primeiroResultado = searchData.query.search[0];
 
-            // 2. Obtém os detalhes (resumo, imagem e link) da página encontrada
+            // 2. Detalhes da página encontrada
             const detailsUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(primeiroResultado.title)}&format=json&origin=*`;
             const detailsResponse = await fetch(detailsUrl);
-            if (!detailsResponse.ok) throw new Error('Erro ao carregar detalhes do artigo.');
-
             const detailsData = await detailsResponse.json();
+            
             const pages = detailsData.query.pages;
             const pageId = Object.keys(pages)[0];
 
@@ -52,9 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const artigo = pages[pageId];
 
-            // 3. Renderiza os dados no card
+            // 3. Renderização
             setTexto(saintName, artigo.title);
-            setTexto(saintBio, artigo.extract || 'Resumo em texto indisponível.');
+            setTexto(saintBio, artigo.extract || 'Resumo indisponível.');
 
             if (saintImg) {
                 if (artigo.original && artigo.original.source) {
@@ -73,26 +73,33 @@ document.addEventListener('DOMContentLoaded', () => {
             if (saintCard) saintCard.classList.remove('hidden');
 
         } catch (erro) {
-            setTexto(statusMessage, `[Aviso]: ${erro.message}`);
+            console.error(erro);
+            setTexto(statusMessage, `[Erro]: ${erro.message}`);
         }
     }
 
-    // Event Listeners
+    // Clique no botão
     if (searchBtn) {
-        searchBtn.addEventListener('click', () => {
+        searchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             if (saintInput) buscarWikipedia(saintInput.value);
         });
     }
 
+    // Enter no Input
     if (saintInput) {
         saintInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') buscarWikipedia(saintInput.value);
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                buscarWikipedia(saintInput.value);
+            }
         });
     }
 
+    // Clique nos Chips
     chips.forEach(chip => {
         chip.addEventListener('click', () => {
-            const nome = chip.getAttribute('data-name');
+            const nome = chip.getAttribute('data-name') || chip.textContent;
             if (saintInput) saintInput.value = nome;
             buscarWikipedia(nome);
         });
