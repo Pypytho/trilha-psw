@@ -28,109 +28,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const termoLower = termo.toLowerCase();
+            let queryBusca = termo;
 
-            // Primeira tentativa: Query SPARQL estrita com data de canonização
-            const sparqlQuery = `
-                SELECT ?item ?itemLabel ?canonizationDate ?article WHERE {
-                  ?item wdt:P425 ?canonizationDate .
-                  ?item wdt:P6129 wd:Q9592 .
-                  ?item wdt:P31 wd:Q5 .
-                  ?article schema:about ?item ;
-                           schema:isPartOf <https://pt.wikipedia.org/> .
-                  FILTER(CONTAINS(LCASE(?itemLabel), "${termoLower}"))
-                  SERVICE wikibase:label { bd:serviceParam wikibase:language "pt,en". }
-                } LIMIT 10
-            `;
-
-            console.log("Query SPARQL:", sparqlQuery);
-
-            const wikidataUrl = `https://query.wikidata.org/sparql?query=${encodeURIComponent(sparqlQuery)}&format=json`;
-            
-            const wikiResponse = await fetch(wikidataUrl, {
-                headers: { 'Accept': 'application/sparql-results+json' }
-            });
-
-            if (!wikiResponse.ok) {
-                throw new Error('Erro ao conectar com Wikidata');
+            // Adiciona "Santo" se não começar com prefixo comum
+            if (!termoLower.startsWith('são ') && 
+                !termoLower.startsWith('santo ') && 
+                !termoLower.startsWith('santa ') && 
+                !termoLower.startsWith('beato ') && 
+                !termoLower.startsWith('beata ')) {
+                queryBusca = `Santo ${termo}`;
             }
 
-            const wikiData = await wikiResponse.json();
-            console.log("Resposta Wikidata (com P425):", wikiData);
+            // Busca na Wikipedia
+            const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(queryBusca)}&format=json&origin=*`;
             
-            let bindings = wikiData.results?.bindings || [];
+            const searchRes = await fetch(searchUrl);
+            const searchData = await searchRes.json();
 
-            // Se não encontrou com P425 (data de canonização), tenta busca mais ampla
-            if (bindings.length === 0) {
-                console.log("Nenhum resultado com P425, tentando busca ampla...");
+            console.log("Resultados da busca Wikipedia:", searchData.query.search);
+
+            if (!searchData.query?.search || searchData.query.search.length === 0) {
+                throw new Error(`Nenhuma página encontrada para "${termo}".`);
+            }
+
+            // Tenta cada resultado e valida se é santo
+            const candidatos = searchData.query.search.slice(0, 10);
+
+            for (const cand of candidatos) {
+                console.log("Validando candidato:", cand.title);
+
+                const detailsUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=50&titles=${encodeURIComponent(cand.title)}&format=json&origin=*`;
                 
-                const sparqlQueryAmpla = `
-                    SELECT ?item ?itemLabel ?article WHERE {
-                      ?item wdt:P31 wd:Q5 .
-                      ?item wdt:P6129 wd:Q9592 .
-                      ?article schema:about ?item ;
-                               schema:isPartOf <https://pt.wikipedia.org/> .
-                      FILTER(CONTAINS(LCASE(?itemLabel), "${termoLower}"))
-                      SERVICE wikibase:label { bd:serviceParam wikibase:language "pt,en". }
-                    } LIMIT 10
-                `;
+                const detailsRes = await fetch(detailsUrl);
+                const detailsData = await detailsRes.json();
+                const pages = Object.values(detailsData.query.pages);
 
-                const wikidataUrlAmpla = `https://query.wikidata.org/sparql?query=${encodeURIComponent(sparqlQueryAmpla)}&format=json`;
-                const wikiResponseAmpla = await fetch(wikidataUrlAmpla, {
-                    headers: { 'Accept': 'application/sparql-results+json' }
-                });
+                if (pages.length === 0 || pages[0].missing) {
+                    console.log("Página não encontrada:", cand.title);
+                    continue;
+                }
 
-                const wikiDataAmpla = await wikiResponseAmpla.json();
-                console.log("Resposta Wikidata (ampla):", wikiDataAmpla);
-                bindings = wikiDataAmpla.results?.bindings || [];
-            }
-
-            if (bindings.length === 0) {
-                throw new Error(`"${termo}" não é um Santo ou Santa canonizado pela Igreja Católica.`);
-            }
-
-            // Pega o primeiro resultado
-            const primeiroResultado = bindings[0];
-            const nomeSanto = primeiroResultado.itemLabel.value;
-            console.log("Santo encontrado:", nomeSanto);
-
-            // Busca os detalhes completos na Wikipedia
-            const detailsUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=50&titles=${encodeURIComponent(nomeSanto)}&format=json&origin=*`;
-            
-            console.log("Buscando detalhes Wikipedia:", nomeSanto);
-            const detailsRes = await fetch(detailsUrl);
-            const detailsData = await detailsRes.json();
-            const pages = Object.values(detailsData.query.pages);
-
-            console.log("Páginas encontradas:", pages);
-
-            if (pages.length === 0 || pages[0].missing) {
-                throw new Error(`Página do Wikipedia não encontrada para ${nomeSanto}`);
-            }
-
-            const page = pages[0];
-            console.log("Categorias da página:", page.categories);
-
-            // Valida se tem categorias de santo canonizado
-            if (page.categories && page.categories.length > 0) {
-                const cats = page.categories.map(c => c.title.toLowerCase());
-                console.log("Categorias em lowercase:", cats);
+                const page = pages[0];
                 
-                const ehSanto = cats.some(c => 
-                    c.includes('santo') || 
-                    c.includes('santa') || 
-                    c.includes('canonizado') ||
-                    c.includes('beato') ||
-                    c.includes('beata')
-                );
+                // Valida se tem categorias de santo
+                if (page.categories && page.categories.length > 0) {
+                    const cats = page.categories.map(c => c.title.toLowerCase());
+                    console.log("Categorias de", cand.title, ":", cats);
+                    
+                    const ehSanto = cats.some(c => 
+                        c.includes('santos católicos') || 
+                        c.includes('santas católicas') ||
+                        c.includes('doutores da igreja') ||
+                        c.includes('beatos católicos') ||
+                        c.includes('beatas católicas') ||
+                        c.includes('canonizados')
+                    );
 
-                if (!ehSanto) {
-                    console.warn("Não encontrou categorias de santo");
+                    if (ehSanto) {
+                        console.log("✓ Santo encontrado e validado:", cand.title);
+                        renderizarPagina(page);
+                        setTexto(statusMessage, '');
+                        if (saintCard) saintCard.classList.remove('hidden');
+                        return;
+                    }
                 }
             }
 
-            renderizarPagina(page);
-            setTexto(statusMessage, '');
-            if (saintCard) saintCard.classList.remove('hidden');
+            throw new Error(`"${termo}" não é um Santo ou Santa canonizado pela Igreja Católica.`);
 
         } catch (erro) {
             console.error("Erro:", erro);
