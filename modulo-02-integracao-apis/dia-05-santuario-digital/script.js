@@ -1,5 +1,4 @@
-// Coloque isto na topo do script.js para confirmar o carregamento no F12
-console.log(">>> CÓDIGO NOVO CARREGADO COM SUCESSO <<<");
+console.log(">>> CÓDIGO FINAL CALIBRADO CARREGADO <<<");
 
 document.addEventListener('DOMContentLoaded', () => {
     const saintInput = document.querySelector('#saint-input');
@@ -17,24 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elemento) elemento.textContent = texto;
     }
 
-    // PALAVRAS-CHAVE EXCLUSIVAS DE CANONIZAÇÃO
-    const TERMOS_CANONIZACAO = [
-        'beatificad',      // beatificado, beatificada, beatificação
-        'canonizad',      // canonizado, canonizada, canonização
-        'papa da igreja', 
-        'santo católico', 
-        'santa católica', 
-        'doutor da igreja', 
-        'doutora da igreja',
-        'mártir católic',
-        'festa litúrgica'
+    // 1. TERMOS SACROS AMPLIADOS (O artigo DEVE ter pelo menos um destes no resumo)
+    const TERMOS_SACROS = [
+        'canonizad', 'beatificad', 'papa', 'doutor da igreja', 'doutora da igreja',
+        'mártir', 'santo católico', 'santa católica', 'venerad', 'padroeir', 
+        'religioso', 'religiosa', 'cristã', 'católic', 'igreja', 'bispo', 'frei', 
+        'freira', 'monge', 'monja', 'místico', 'mística', 'franciscan', 'beneditin',
+        'dominican', 'jesuíta', 'virgem', 'festa litúrgica', 'santuário'
     ];
 
-    // TERMOS QUE CANCELAM O RESULTADO INSTANTANEAMENTE
+    // 2. BLOQUEIO INTRANSIGENTE (Se tiver QUALQUER um destes, é descartado na hora)
     const TERMOS_PROIBIDOS = [
         'futebol', 'clube', 'esporte', 'estádio', 'município', 'prefeitura',
         'físico', 'nobel', 'física', 'cientista', 'relatividade', 'televisão',
-        'campeonato', 'associação atlética', 'empresa', 'político', 'deputado'
+        'campeonato', 'associação atlética', 'empresa', 'político', 'deputado', 'álbum'
     ];
 
     async function buscarSantoWikipedia(termoBusca) {
@@ -44,18 +39,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const termo = termoBusca.trim();
-        setTexto(statusMessage, 'Pesquisando no acervo...');
+        setTexto(statusMessage, 'Pesquisando e validando santo...');
         if (saintCard) saintCard.classList.add('hidden');
 
         try {
             const termoLower = termo.toLowerCase();
 
-            // 1. PRIMEIRA CHECAGEM: Força a busca hagiográfica se o usuário não digitou o prefixo
+            // Formata a consulta para priorizar o título religioso na Wikipédia
             let queryBusca = termo;
             if (!termoLower.startsWith('são ') && !termoLower.startsWith('santo ') && !termoLower.startsWith('santa ') && !termoLower.startsWith('beato ') && !termoLower.startsWith('beata ')) {
                 queryBusca = `Santo ${termo}`;
             }
 
+            // Busca os 8 primeiros resultados para dar margem a nomes comuns
             const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(queryBusca)}&format=json&origin=*`;
             const searchResponse = await fetch(searchUrl);
             if (!searchResponse.ok) throw new Error(`Falha de conexão com a Wikipédia.`);
@@ -65,10 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Nenhum resultado encontrado para "${termo}".`);
             }
 
-            const resultados = searchData.query.search.slice(0, 5);
+            const resultados = searchData.query.search.slice(0, 8);
             let artigoAprovado = null;
 
-            // 2. SEGUNDA CHECAGEM: Validação estrita do texto da página
+            // Análise detalhada dos resumos
             for (const item of resultados) {
                 const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
                 const summaryResponse = await fetch(summaryUrl);
@@ -84,29 +80,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tituloLower = artigo.title.toLowerCase();
                 const extractLower = (artigo.extract || '').toLowerCase();
 
-                // Checagem Anti-Falso-Positivo
+                // FILTRO A: Rejeição absoluta por termos seculares (Barra Einstein, futebol, etc.)
                 const ehSecular = TERMOS_PROIBIDOS.some(proibido => 
                     tituloLower.includes(proibido) || extractLower.includes(proibido)
                 );
 
                 if (ehSecular) continue;
 
-                // Checagem Obrigatoria de Canonização / Papa / Beatificado
-                const ehValidoPorCanonizacao = TERMOS_CANONIZACAO.some(termoSacro => 
+                // FILTRO B: Validação de Pertencimento Religioso/Sacro
+                const possuiTermoSacro = TERMOS_SACROS.some(termoSacro => 
                     extractLower.includes(termoSacro)
                 );
 
-                if (ehValidoPorCanonizacao) {
+                // Deve conter um termo sacro E ter o prefixo no título ou no resumo
+                const temNomeDeSanto = tituloLower.startsWith('são ') || 
+                                       tituloLower.startsWith('santo ') || 
+                                       tituloLower.startsWith('santa ') || 
+                                       tituloLower.startsWith('beato ') || 
+                                       tituloLower.startsWith('beata ') ||
+                                       extractLower.includes('santo') ||
+                                       extractLower.includes('santa');
+
+                if (possuiTermoSacro && temNomeDeSanto) {
                     artigoAprovado = artigo;
-                    break;
+                    break; // Encontrou o Santo!
                 }
             }
 
             if (!artigoAprovado) {
-                throw new Error(`"${termo}" não foi validado como Santo, Papa ou figura beatificada no acervo.`);
+                throw new Error(`"${termo}" não foi reconhecido como um Santo ou Santa católico validado.`);
             }
 
-            // 3. RENDERIZAÇÃO
+            // RENDERIZAÇÃO
             setTexto(saintName, artigoAprovado.title);
             setTexto(saintBio, artigoAprovado.extract || 'Resumo não disponível.');
 
