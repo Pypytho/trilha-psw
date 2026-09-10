@@ -25,18 +25,31 @@ async function buscarSantoWikipedia(termoBusca) {
     if (saintCard) saintCard.classList.add('hidden');
 
     try {
-        // ETAPA 1: Tenta buscar pelo termo combinado com palavras-chave hagiográficas
-        // Montamos consultas alternativas para garantir que o resultado seja um santo
+        // Consultas priorizadas para focar no contexto religioso
         const consultas = [
+            `São ${termo}`,
             `Santo ${termo}`,
             `Santa ${termo}`,
-            `São ${termo}`,
             `${termo} (santo)`,
             `${termo} (santa)`,
             termo
         ];
 
         let artigoEncontrado = null;
+
+        // LISTA NEGRA: Se a categoria ou o título contiver qualquer um destes termos, DESCARTA imediatamente!
+        const termosProibidos = [
+            'futebol', 'clube', 'esporte', 'associação', 'município', 'cidade', 'bairro',
+            'apresentador', 'empresário', 'televisão', 'série', 'filme', 'álbum', 'música',
+            'estádio', 'hospital', 'universidade', 'estação', 'rodovia', 'desambiguação'
+        ];
+
+        // LISTA BRANCA: Categorias/termos obrigatoriamente ligados à santidade/canonização
+        const termosReligiosos = [
+            'santos', 'santas', 'mártires', 'papas', 'beatos', 'beatas',
+            'canonizados', 'místicos', 'místicas', 'religiosos', 'bispos', 'frades',
+            'freiras', 'teólogos', 'doutores da igreja'
+        ];
 
         for (const query of consultas) {
             const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
@@ -46,9 +59,9 @@ async function buscarSantoWikipedia(termoBusca) {
             const searchData = await searchResponse.json();
             if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) continue;
 
-            // Percorre os 3 primeiros resultados para verificar se algum é um Santo
-            for (const item of searchData.query.search.slice(0, 3)) {
-                const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=50&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
+            // Analisa os resultados da busca
+            for (const item of searchData.query.search.slice(0, 5)) {
+                const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=100&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
                 const summaryResponse = await fetch(summaryUrl);
                 if (!summaryResponse.ok) continue;
 
@@ -62,23 +75,24 @@ async function buscarSantoWikipedia(termoBusca) {
                 const tituloLower = artigo.title.toLowerCase();
                 const extractLower = (artigo.extract || '').toLowerCase();
 
-                // Monta a lista de categorias em formato normalizado (sem "Categoria:")
+                // Monta texto das categorias
                 const categorias = artigo.categories 
-                    ? artigo.categories.map(c => c.title.toLowerCase()) 
-                    : [];
+                    ? artigo.categories.map(c => c.title.toLowerCase()).join(' ') 
+                    : '';
 
-                // 1. Checagem por Categoria
-                const ehSantoPorCategoria = categorias.some(cat => 
-                    cat.includes('santo') || 
-                    cat.includes('santa') || 
-                    cat.includes('mártir') || 
-                    cat.includes('papa') || 
-                    cat.includes('beato') ||
-                    cat.includes('canonizado') ||
-                    cat.includes('religioso')
-                );
+                const textoCompletoParaAnalise = `${tituloLower} ${categorias}`;
 
-                // 2. Checagem por Título
+                // 1. FILTRO DE EXCLUSÃO (BLACK LIST)
+                // Se contiver qualquer palavra proibida (como clube, apresentador, futebol), ignora na hora
+                const ehProibido = termosProibidos.some(proibido => textoCompletoParaAnalise.includes(proibido));
+                if (ehProibido) {
+                    continue; // Pula para o próximo artigo da lista
+                }
+
+                // 2. FILTRO DE INCLUSÃO (WHITE LIST)
+                // Checa se o artigo tem indícios reais de ser uma pessoa canonizada/religiosa
+                const ehSantoPorCategoria = termosReligiosos.some(termoSacro => categorias.includes(termoSacro));
+                
                 const ehSantoPorTitulo = 
                     tituloLower.startsWith('santo ') || 
                     tituloLower.startsWith('santa ') || 
@@ -86,11 +100,16 @@ async function buscarSantoWikipedia(termoBusca) {
                     tituloLower.includes('(santo)') || 
                     tituloLower.includes('(santa)');
 
-                // 3. Checagem por Termos no Resumo
-                const termosSacros = ['santo', 'santa', 'canonizad', 'mártir', 'virgem', 'beatificad', 'igreja católica', 'bispo'];
-                const ehSantoPorTexto = termosSacros.some(t => extractLower.includes(t));
+                const ehSantoPorTexto = (
+                    extractLower.includes('canonizad') || 
+                    extractLower.includes('beatificad') || 
+                    extractLower.includes('mártir') || 
+                    extractLower.includes('igreja católica') ||
+                    extractLower.includes('festa litúrgica')
+                );
 
-                if (ehSantoPorCategoria || ehSantoPorTitulo || (ehSantoPorTexto && (tituloLower.includes(termo.toLowerCase())))) {
+                // Só aceita se passar no filtro e tiver ligação com santidade
+                if (ehSantoPorCategoria || ehSantoPorTitulo || ehSantoPorTexto) {
                     artigoEncontrado = artigo;
                     break;
                 }
@@ -100,12 +119,12 @@ async function buscarSantoWikipedia(termoBusca) {
         }
 
         if (!artigoEncontrado) {
-            throw new Error(`Nenhum santo ou santa encontrado para "${termo}". Certifique-se de digitar o nome correto.`);
+            throw new Error(`Nenhum santo ou santa encontrado para "${termo}". Tente buscar por um nome como "Agostinho", "Rita", "Francisco" ou "Expedito".`);
         }
 
-        // ETAPA 2: Renderização dos dados
+        // Renderização dos dados validados
         setTexto(saintName, artigoEncontrado.title);
-        setTexto(saintBio, artigoEncontrado.extract || 'Nenhum resumo em texto disponível para este artigo.');
+        setTexto(saintBio, artigoEncontrado.extract || 'Nenhum resumo disponível para este artigo.');
 
         if (saintImg) {
             if (artigoEncontrado.original && artigoEncontrado.original.source) {
@@ -124,7 +143,7 @@ async function buscarSantoWikipedia(termoBusca) {
         if (saintCard) saintCard.classList.remove('hidden');
 
     } catch (erro) {
-        setTexto(statusMessage, `[Aviso]: ${erro.message}`);
+        setTexto(statusMessage, `[Filtro de Segurança]: ${erro.message}`);
     }
 }
 
