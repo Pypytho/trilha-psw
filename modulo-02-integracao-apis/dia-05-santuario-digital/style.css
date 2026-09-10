@@ -15,7 +15,7 @@ body {
     background-color: #1a2126;
     padding: 2rem 1rem;
     text-align: center;
-    border-bottom: 2px solid #d4af37; /* Destaque em tom Dourado/Sacro */
+    border-bottom: 2px solid #d4af37;
 }
 
 .navbar h1 {
@@ -104,14 +104,15 @@ body {
 .saint-header {
     display: flex;
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     border-bottom: 1px solid #2e3a44;
     padding-bottom: 1.5rem;
+    align-items: center;
 }
 
 .saint-header img {
-    width: 140px;
-    height: 180px;
+    width: 130px;
+    height: 160px;
     object-fit: cover;
     border-radius: 8px;
     border: 2px solid #d4af37;
@@ -119,23 +120,17 @@ body {
 
 .saint-header-info h2 {
     color: #d4af37;
-    font-size: 1.5rem;
-    margin-bottom: 0.3rem;
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
 }
 
 .badge {
     display: inline-block;
     background-color: #2d3842;
-    color: #fff;
+    color: #9ba7b3;
     font-size: 0.8rem;
     padding: 0.2rem 0.6rem;
     border-radius: 4px;
-    margin-bottom: 0.8rem;
-}
-
-.saint-header-info p {
-    font-size: 0.9rem;
-    color: #c0cb3;
 }
 
 .saint-body h3 {
@@ -149,12 +144,24 @@ body {
     color: #d1d9e0;
 }
 
-.quote {
-    background-color: #121619;
-    border-left: 4px solid #d4af37;
-    padding: 1rem 1.5rem;
-    font-style: italic;
-    color: #e0e6ed;
+.actions {
+    margin-top: 1rem;
+}
+
+.wiki-btn {
+    display: inline-block;
+    color: #d4af37;
+    text-decoration: none;
+    font-weight: bold;
+    border: 1px solid #d4af37;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+.wiki-btn:hover {
+    background-color: #d4af37;
+    color: #121619;
 }
 
 .footer {
