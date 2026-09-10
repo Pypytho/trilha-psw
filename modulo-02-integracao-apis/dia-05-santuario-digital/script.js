@@ -10,159 +10,109 @@ const saintName = document.querySelector('#saint-name');
 const saintBio = document.querySelector('#saint-bio');
 const saintLink = document.querySelector('#saint-link');
 
-// Função auxiliar para atualizar texto de forma segura sem dar crash
 function setTexto(elemento, texto) {
-    if (elemento) {
-        elemento.textContent = texto;
-    }
+    if (elemento) elemento.textContent = texto;
 }
+
 async function buscarSantoWikipedia(termoBusca) {
     if (!termoBusca || !termoBusca.trim()) {
         setTexto(statusMessage, 'Por favor, digite o nome de um santo.');
         return;
     }
 
-    setTexto(statusMessage, 'Pesquisando na biblioteca de santos...');
+    setTexto(statusMessage, 'Pesquisando no acervo de santos...');
     if (saintCard) saintCard.classList.add('hidden');
 
     try {
-        // 1. Força a busca a incluir prefixos de santidade
-        const termoComFiltro = `(Santo OR Santa OR São) ${termoBusca.trim()}`;
-        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termoComFiltro)}&format=json&origin=*`;
+        // ETAPA 1: Busca os artigos mais relevantes na Wikipedia acrescentando "Santo" à consulta para ranqueamento
+        const consultaTratada = `Santo ${termoBusca.trim()}`;
+        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(consultaTratada)}&format=json&origin=*`;
         
         const searchResponse = await fetch(searchUrl);
-        if (!searchResponse.ok) {
-            throw new Error(`Erro na conexão (Status: ${searchResponse.status})`);
-        }
+        if (!searchResponse.ok) throw new Error(`Erro na conexão (Status: ${searchResponse.status})`);
 
         const searchData = await searchResponse.json();
 
         if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
-            throw new Error(`Nenhum santo ou santa encontrado para "${termoBusca}".`);
+            throw new Error(`Nenhum resultado encontrado para "${termoBusca}".`);
         }
 
-        const tituloExato = searchData.query.search[0].title;
+        // Analisa os primeiros 5 resultados da pesquisa para encontrar um que seja REALMENTE um Santo/Santa
+        const resultados = searchData.query.search;
+        let artigoValido = null;
+        let dadosArtigo = null;
 
-        // 2. Obtém os detalhes do artigo
-        const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(tituloExato)}&format=json&origin=*`;
-        
-        const summaryResponse = await fetch(summaryUrl);
-        if (!summaryResponse.ok) {
-            throw new Error(`Erro ao carregar o artigo (Status: ${summaryResponse.status})`);
+        for (const item of resultados) {
+            // ETAPA 2: Requisita o resumo, imagem E as categorias da página
+            const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=50&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
+            
+            const summaryResponse = await fetch(summaryUrl);
+            if (!summaryResponse.ok) continue;
+
+            const summaryData = await summaryResponse.json();
+            const pages = summaryData.query.pages;
+            const pageId = Object.keys(pages)[0];
+
+            if (pageId === "-1") continue;
+
+            const artigo = pages[pageId];
+            const categorias = artigo.categories ? artigo.categories.map(c => c.title.toLowerCase()) : [];
+
+            // Validação estrita por Categoria ou Título
+            const ehSantoPorCategoria = categorias.some(cat => 
+                cat.includes('santos') || 
+                cat.includes('santas') || 
+                cat.includes('mártires') || 
+                cat.includes('papas') || 
+                cat.includes('beatos') || 
+                cat.includes('místicos')
+            );
+
+            const tituloLower = artigo.title.toLowerCase();
+            const ehSantoPorTitulo = tituloLower.startsWith('santo ') || 
+                                     tituloLower.startsWith('santa ') || 
+                                     tituloLower.startsWith('são ') || 
+                                     tituloLower.includes(' (santo)') || 
+                                     tituloLower.includes(' (santa)');
+
+            if (ehSantoPorCategoria || ehSantoPorTitulo) {
+                artigoValido = artigo;
+                dadosArtigo = artigo;
+                break; // Achou o santo correto! Sai do loop.
+            }
         }
 
-        const summaryData = await summaryResponse.json();
-        const pages = summaryData.query.pages;
-        const pageId = Object.keys(pages)[0];
-
-        if (pageId === "-1") {
-            throw new Error('Página não encontrada no acervo.');
+        // Se nenhum dos resultados for um Santo ou Santa
+        if (!dadosArtigo) {
+            throw new Error(`O termo "${termoBusca}" não corresponde a um Santo ou Santa reconhecido na Wikipedia.`);
         }
 
-        const artigo = pages[pageId];
-
-        // 3. Validação de segurança sobre o tema
-        const palavrasChave = ['santo', 'santa', 'são', 'mártir', 'bispo', 'virgem', 'beato', 'beata', 'igreja', 'canonizad', 'papa', 'religios'];
-        const resumoLower = artigo.extract ? artigo.extract.toLowerCase() : '';
-        const tituloLower = artigo.title.toLowerCase();
-
-        const ehSanto = palavrasChave.some(palavra => tituloLower.includes(palavra) || resumoLower.includes(palavra));
-
-        if (!ehSanto) {
-            throw new Error(`Nenhum registro hagiográfico encontrado para "${termoBusca}". Certifique-se de digitar o nome de um santo ou santa.`);
-        }
-
-        // 4. Injeta no DOM
-        setTexto(saintName, artigo.title);
-        setTexto(saintBio, artigo.extract || 'Nenhum resumo disponível para este artigo.');
+        // ETAPA 3: Renderiza os dados validados no DOM
+        setTexto(saintName, dadosArtigo.title);
+        setTexto(saintBio, dadosArtigo.extract || 'Nenhum resumo em texto disponível para este artigo.');
 
         if (saintImg) {
-            if (artigo.original && artigo.original.source) {
-                saintImg.src = artigo.original.source;
+            if (dadosArtigo.original && dadosArtigo.original.source) {
+                saintImg.src = dadosArtigo.original.source;
                 saintImg.style.display = 'block';
             } else {
                 saintImg.style.display = 'none';
             }
         }
 
-        if (saintLink && artigo.fullurl) {
-            saintLink.href = artigo.fullurl;
+        if (saintLink && dadosArtigo.fullurl) {
+            saintLink.href = dadosArtigo.fullurl;
         }
 
         setTexto(statusMessage, '');
         if (saintCard) saintCard.classList.remove('hidden');
 
     } catch (erro) {
-        setTexto(statusMessage, `[Aviso]: ${erro.message}`);
+        setTexto(statusMessage, `[Filtro de Segurança]: ${erro.message}`);
     }
 }
 
-    setTexto(statusMessage, 'Pesquisando na Wikipedia...');
-    if (saintCard) saintCard.classList.add('hidden');
-
-    try {
-        // ETAPA 1: Pesquisa inteligente pelo termo na Wikipedia
-        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termoBusca.trim())}&format=json&origin=*`;
-        
-        const searchResponse = await fetch(searchUrl);
-        if (!searchResponse.ok) {
-            throw new Error(`Erro na conexão (Status: ${searchResponse.status})`);
-        }
-
-        const searchData = await searchResponse.json();
-
-        if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
-            throw new Error(`Nenhum artigo encontrado para "${termoBusca}".`);
-        }
-
-        const tituloExato = searchData.query.search[0].title;
-
-        // ETAPA 2: Obtém o resumo e imagem do artigo encontrado
-        const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(tituloExato)}&format=json&origin=*`;
-        
-        const summaryResponse = await fetch(summaryUrl);
-        if (!summaryResponse.ok) {
-            throw new Error(`Erro ao carregar o artigo (Status: ${summaryResponse.status})`);
-        }
-
-        const summaryData = await summaryResponse.json();
-        const pages = summaryData.query.pages;
-        const pageId = Object.keys(pages)[0];
-
-        if (pageId === "-1") {
-            throw new Error('Página não encontrada no acervo da Wikipedia.');
-        }
-
-        const artigo = pages[pageId];
-
-        // ETAPA 3: Injeta com segurança no DOM
-        setTexto(saintName, artigo.title);
-        setTexto(saintBio, artigo.extract || 'Nenhum resumo disponível para este artigo.');
-
-        // Trata a imagem
-        if (saintImg) {
-            if (artigo.original && artigo.original.source) {
-                saintImg.src = artigo.original.source;
-                saintImg.style.display = 'block';
-            } else {
-                saintImg.style.display = 'none';
-            }
-        }
-
-        // Link oficial
-        if (saintLink && artigo.fullurl) {
-            saintLink.href = artigo.fullurl;
-        }
-
-        setTexto(statusMessage, '');
-        if (saintCard) saintCard.classList.remove('hidden');
-
-    } catch (erro) {
-        setTexto(statusMessage, `[Aviso]: ${erro.message}`);
-    }
-}
-
-// Escutadores de Eventos
+// Event Listeners
 if (searchBtn) {
     searchBtn.addEventListener('click', () => {
         if (saintInput) buscarSantoWikipedia(saintInput.value);
