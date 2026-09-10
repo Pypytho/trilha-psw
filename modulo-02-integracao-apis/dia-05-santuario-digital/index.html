@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Santuário Digital - História dos Santos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <h1>Santuário Digital</h1>
+        <p>Hagiografia e História dos Santos da Igreja</p>
+    </header>
+
+    <main class="container">
+        <!-- Campo de Busca -->
+        <section class="search-box">
+            <input type="text" id="saint-input" placeholder="Digite o nome do santo (ex: Agostinho, Francisco)..." />
+            <button id="search-btn">Buscar Santo</button>
+        </section>
+
+        <!-- Botões de Acesso Rápido -->
+        <section class="quick-links">
+            <span>Sugestões:</span>
+            <button class="chip" data-name="Agostinho">Santo Agostinho</button>
+            <button class="chip" data-name="Francisco">São Francisco</button>
+            <button class="chip" data-name="Teresa">Santa Teresa</button>
+            <button class="chip" data-name="Tomás">São Tomás</button>
+        </section>
+
+        <!-- Mensagem de Status / Erro -->
+        <div id="status-message" class="status"></div>
+
+        <!-- Exibição do Perfil do Santo -->
+        <article id="saint-card" class="saint-card hidden">
+            <div class="saint-header">
+                <img id="saint-img" src="" alt="Imagem do Santo">
+                <div class="saint-header-info">
+                    <h2 id="saint-name"></h2>
+                    <span id="saint-title" class="badge"></span>
+                    <p><strong>Memória Litúrgica:</strong> <span id="saint-date"></span></p>
+                    <p><strong>Período:</strong> <span id="saint-period"></span></p>
+                    <p><strong>Padroeiro de:</strong> <span id="saint-patron"></span></p>
+                </div>
+            </div>
+
+            <div class="saint-body">
+                <h3>História e Biografia</h3>
+                <p id="saint-bio" class="bio-text"></p>
+                
+                <blockquote class="quote">
+                    <p id="saint-quote"></p>
+                </blockquote>
+            </div>
+        </article>
+    </main>
+
+    <footer class="footer">
+        <p>Projeto de Software para Web &copy; 2026 - Módulo 02</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
