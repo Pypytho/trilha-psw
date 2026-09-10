@@ -10,52 +10,59 @@ const saintName = document.querySelector('#saint-name');
 const saintBio = document.querySelector('#saint-bio');
 const saintLink = document.querySelector('#saint-link');
 
-// Função assíncrona para buscar na API da Wikipedia
 async function buscarSantoWikipedia(termoBusca) {
     if (!termoBusca || !termoBusca.trim()) {
         statusMessage.textContent = 'Por favor, digite o nome de um santo.';
         return;
     }
 
-    statusMessage.textContent = 'Buscando registros na Wikipedia...';
+    statusMessage.textContent = 'Pesquisando na Wikipedia...';
     saintCard.classList.add('hidden');
 
-    // Formatação correta da URL mantendo o underline visível para a Wikipedia
-    const termoTratado = termoBusca.trim().replace(/\s+/g, '_');
-    const termoFinal = encodeURIComponent(termoTratado).replace(/%5FB/g, '_');
-
     try {
-        // Usa a API da Wikipedia aceitando redirecionamentos automáticos
-        const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${termoFinal}?redirect=true`;
+        // ETAPA 1: Busca o título exato do artigo mais relevante usando a API de busca da Wikipedia
+        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termoBusca.trim())}&format=json&origin=*`;
         
-        const resposta = await fetch(url);
-
-        if (!resposta.ok) {
-            throw new Error(`Não foi possível encontrar a página para "${termoBusca}". Tente o nome completo (ex: "Santo Agostinho" ou "São Francisco de Assis").`);
+        const searchResponse = await fetch(searchUrl);
+        if (!searchResponse.ok) {
+            throw new Error('Falha na conexão com os servidores da Wikipedia.');
         }
 
-        const data = await resposta.json();
+        const searchData = await searchResponse.json();
 
-        // Se a página retornada for uma página de busca/desambiguação ou não tiver resumo
-        if (data.type === 'disambiguation') {
-            throw new Error(`O termo "${termoBusca}" é muito genérico. Tente especificar melhor o nome do santo.`);
+        // Se a busca não retornar nenhum resultado
+        if (!searchData.query.search || searchData.query.search.length === 0) {
+            throw new Error(`Nenhum artigo encontrado para "${termoBusca}". Tente digitar de outra forma.`);
         }
 
-        // Injeta os dados retornados no DOM
-        saintName.textContent = data.title;
-        saintBio.textContent = data.extract || 'Nenhum resumo disponível para este artigo.';
-        
-        // Exibe ou esconde a imagem
-        if (data.thumbnail && data.thumbnail.source) {
-            saintImg.src = data.thumbnail.source;
+        // Pega o título exato do primeiro resultado da pesquisa
+        const tituloExato = searchData.query.search[0].title;
+
+        // ETAPA 2: Busca o resumo e imagem do artigo usando o título exato encontrado
+        const summaryUrl = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(tituloExato)}`;
+        const summaryResponse = await fetch(summaryUrl);
+
+        if (!summaryResponse.ok) {
+            throw new Error('Não foi possível carregar o resumo do artigo.');
+        }
+
+        const summaryData = await summaryResponse.json();
+
+        // ETAPA 3: Renderiza as informações na tela
+        saintName.textContent = summaryData.title;
+        saintBio.textContent = summaryData.extract || 'Nenhum resumo em texto disponível para este artigo.';
+
+        // Imagem principal
+        if (summaryData.thumbnail && summaryData.thumbnail.source) {
+            saintImg.src = summaryData.thumbnail.source;
             saintImg.style.display = 'block';
         } else {
             saintImg.style.display = 'none';
         }
 
         // Link oficial para a página
-        if (data.content_urls && data.content_urls.desktop) {
-            saintLink.href = data.content_urls.desktop.page;
+        if (summaryData.content_urls && summaryData.content_urls.desktop) {
+            saintLink.href = summaryData.content_urls.desktop.page;
         }
 
         statusMessage.textContent = '';
@@ -63,22 +70,23 @@ async function buscarSantoWikipedia(termoBusca) {
 
     } catch (erro) {
         statusMessage.textContent = erro.message;
+        console.error('Erro na API:', erro);
     }
 }
 
-// Escuta o clique no botão de busca
+// Escuta o clique no botão
 searchBtn.addEventListener('click', () => {
     buscarSantoWikipedia(saintInput.value);
 });
 
-// Escuta a tecla Enter
+// Escuta o Enter no input
 saintInput.addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
         buscarSantoWikipedia(saintInput.value);
     }
 });
 
-// Escuta os cliques nos chips de sugestão rápida
+// Escuta o clique nos chips
 chips.forEach(chip => {
     chip.addEventListener('click', () => {
         const nomeSanto = chip.getAttribute('data-name');
