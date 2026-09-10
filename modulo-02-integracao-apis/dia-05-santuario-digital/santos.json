@@ -1,0 +1,46 @@
+[
+  {
+    "id": "santo-agostinho",
+    "nome": "Santo Agostinho de Hipona",
+    "titulo": "Doutor da Graça",
+    "dataFestiva": "28 de Agosto",
+    "periodo": "354 d.C. - 430 d.C.",
+    "padroeiro": "Teólogos, impressores e busca pela verdade",
+    "imagem": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Saint_Augustine_by_Philippe_de_Champaigne.jpg/400px-Saint_Augustine_by_Philippe_de_Champaigne.jpg",
+    "biografia": "Nascido no norte da África, Agostinho levou uma juventude boêmia e de busca intelectual intensa através de várias filosofias. Após anos de orações ininterruptas de sua mãe, Santa Mônica, converteu-se ao cristianismo em Milão sob influência de Santo Ambrósio. Tornou-se bispo de Hipona e um dos maiores filósofos e teólogos da história ocidental, autor de 'Confissões' e 'A Cidade de Deus'.",
+    "frase": "Fizeste-nos, Senhor, para Ti, e o nosso coração permanece inquieto enquanto não repousar em Ti."
+  },
+  {
+    "id": "sao-francisco",
+    "nome": "São Francisco de Assis",
+    "titulo": "O Pobrezinho de Assis",
+    "dataFestiva": "04 de Outubro",
+    "periodo": "1181 - 1226",
+    "padroeiro": "Animais, meio ambiente e ecologia",
+    "imagem": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Jubilee_San_Francesco_Assisi.jpg/400px-Jubilee_San_Francesco_Assisi.jpg",
+    "biografia": "Filho de um rico comerciante de tecidos na Itália, Francisco renunciou a toda a sua herança e bens materiais para viver radicalmente o Evangelho em absoluta pobreza. Fundou a Ordem dos Frades Menores (Franciscanos) e é lembrado por seu amor profundo à criação de Deus e sua pregação da paz e fraternidade universal.",
+    "frase": "Comece fazendo o que é necessário, depois o que é possível, e de repente você estará fazendo o impossível."
+  },
+  {
+    "id": "santa-teresa",
+    "nome": "Santa Teresa de Ávila",
+    "titulo": "Doutora da Igreja & Mística",
+    "dataFestiva": "15 de Outubro",
+    "periodo": "1515 - 1582",
+    "padroeiro": "Escritores e pessoas em busca de vida de oração",
+    "imagem": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Teresa_of_Avila_Bernini.jpg/400px-Teresa_of_Avila_Bernini.jpg",
+    "biografia": "Freira carmelita espanhola, reformadora da Ordem do Carmo e mística profunda. Escreveu clássicos da espiritualidade como 'O Castelo Interior' e 'Caminho de Perfeição'. Foi a primeira mulher a ser proclamada Doutora da Igreja devido à profundidade teológica de seus escritos sobre a vida de oração e união com Deus.",
+    "frase": "Nada te perturbe, nada te espante, tudo passa, Deus não muda. A paciência tudo alcança."
+  },
+  {
+    "id": "sao-tomas",
+    "nome": "São Tomás de Aquino",
+    "titulo": "Doutor Angélico",
+    "dataFestiva": "28 de Janeiro",
+    "periodo": "1225 - 1274",
+    "padroeiro": "Estudantes, universidades e acadêmicos",
+    "imagem": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/St-thomas-aquinas.jpg/400px-St-thomas-aquinas.jpg",
+    "biografia": "Frade dominicano italiano e o maior teólogo e filósofo da Escolástica medieval. Integrou a filosofia aristotélica com o pensamento cristão, sintetizando fé e razão de forma monumental na 'Suma Teológica'. É considerado a mente filosófica mais proeminente da Igreja.",
+    "frase": "Para aquele que tem fé, nenhuma explicação é necessária. Para aquele sem fé, nenhuma explicação é possível."
+  }
+]
