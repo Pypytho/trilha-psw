@@ -7,103 +7,53 @@ const chips = document.querySelectorAll('.chip');
 const saintCard = document.querySelector('#saint-card');
 const saintImg = document.querySelector('#saint-img');
 const saintName = document.querySelector('#saint-name');
-const saintTitle = document.querySelector('#saint-title');
-const saintDate = document.querySelector('#saint-date');
-const saintPeriod = document.querySelector('#saint-period');
-const saintPatron = document.querySelector('#saint-patron');
 const saintBio = document.querySelector('#saint-bio');
-const saintQuote = document.querySelector('#saint-quote');
+const saintLink = document.querySelector('#saint-link');
 
-// Função que faz o fetch do arquivo JSON e busca o santo
-async function buscarSanto(termoBusca) {
+// Função assíncrona que faz requisição à API REST da Wikipedia
+async function buscarSantoWikipedia(termoBusca) {
     if (!termoBusca) {
         statusMessage.textContent = 'Por favor, digite o nome de um santo.';
         return;
     }
 
-    statusMessage.textContent = 'Buscando registros na biblioteca...';
+    statusMessage.textContent = 'Buscando registros na Wikipedia...';
     saintCard.classList.add('hidden');
 
-    try {
-        // Garantimos o caminho relativo correto do arquivo santos.json
-        const resposta = await fetch('./santos.json');
-        
-        // Se o arquivo não for encontrado no servidor (Erro 404)
-        if (!resposta.ok) {
-            throw new Error(`Erro ao carregar o arquivo santos.json (Status: ${resposta.status})`);
-        }
-
-        const listaDeSantos = await resposta.json();
-
-        // Limpa o termo de busca (remove espaços extras)
-        const termoLimpo = termoBusca.trim().toLowerCase();
-
-        // Busca aproximada no nome ou id do santo
-        const santoEncontrado = listaDeSantos.find(santo => {
-            const nomeSanto = santo.nome.toLowerCase();
-            const idSanto = santo.id.toLowerCase();
-            return nomeSanto.includes(termoLimpo) || idSanto.includes(termoLimpo);
-        });
-
-        if (!santoEncontrado) {
-            throw new Error(`Nenhum santo encontrado para "${termoBusca}". Tente digitar: Agostinho, Francisco, Teresa ou Tomás.`);
-        }
-
-        // Preenche os dados no HTML
-        saintImg.src = santoEncontrado.imagem;
-        saintName.textContent = santoEncontrado.nome;
-        saintTitle.textContent = santoEncontrado.titulo;
-        saintDate.textContent = santoEncontrado.dataFestiva;
-        saintPeriod.textContent = santoEncontrado.periodo;
-        saintPatron.textContent = santoEncontrado.padroeiro;
-        saintBio.textContent = santoEncontrado.biografia;
-        saintQuote.textContent = `"${santoEncontrado.frase}"`;
-
-        // Exibe o card
-        statusMessage.textContent = '';
-        saintCard.classList.remove('hidden');
-
-    } catch (erro) {
-        // Exibe a mensagem exata do erro na tela do usuário
-        statusMessage.textContent = erro.message;
-        console.error('Detalhe do Erro:', erro);
-    }
-}
-
-
-    statusMessage.textContent = 'Buscando registros na biblioteca...';
-    saintCard.classList.add('hidden');
+    // Formata o termo de busca: substitui espaços por sublinhados (padrão de URLs da Wikipedia)
+    const termoFormatado = encodeURIComponent(termoBusca.trim().replace(/ /g, '_'));
 
     try {
-        // Faz a requisição assíncrona ao arquivo santos.json
-        const resposta = await fetch('santos.json');
+        // Endpoint REST oficial da Wikipedia para resumos de artigos em Português
+        const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${termoFormatado}`;
         
+        const resposta = await fetch(url);
+
+        // Se a página do artigo não existir na Wikipedia (Erro 404)
         if (!resposta.ok) {
-            throw new Error('Não foi possível carregar a base de dados de santos.');
+            throw new Error(`Não foi possível encontrar a página para "${termoBusca}". Tente digitar o nome completo, ex: "São Francisco de Assis".`);
         }
 
-        const listaDeSantos = await resposta.json();
+        const data = await resposta.json();
 
-        // Procura no array um santo cujo nome contenha o termo digitado (ignorando maiúsculas/minúsculas)
-        const santoEncontrado = listaDeSantos.find(santo => 
-            santo.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
-            santo.id.toLowerCase().includes(termoBusca.toLowerCase())
-        );
-
-        if (!santoEncontrado) {
-            throw new Error(`Nenhum santo encontrado com o nome "${termoBusca}".`);
+        // Injeta os dados retornados pela Wikipedia no DOM
+        saintName.textContent = data.title;
+        saintBio.textContent = data.extract || 'Nenhum resumo em texto disponível para este artigo.';
+        
+        // Trata a imagem: se o artigo possuir imagem principal, exibe-a; senão, esconde o elemento <img>
+        if (data.thumbnail && data.thumbnail.source) {
+            saintImg.src = data.thumbnail.source;
+            saintImg.style.display = 'block';
+        } else {
+            saintImg.style.display = 'none';
         }
 
-        // Renderiza as informações no DOM
-        saintImg.src = santoEncontrado.imagem;
-        saintName.textContent = santoEncontrado.nome;
-        saintTitle.textContent = santoEncontrado.titulo;
-        saintDate.textContent = santoEncontrado.dataFestiva;
-        saintPeriod.textContent = santoEncontrado.periodo;
-        saintPatron.textContent = santoEncontrado.padroeiro;
-        saintBio.textContent = santoEncontrado.biografia;
-        saintQuote.textContent = `"${santoEncontrado.frase}"`;
+        // Define o link direto para a página completa do artigo na Wikipedia
+        if (data.content_urls && data.content_urls.desktop) {
+            saintLink.href = data.content_urls.desktop.page;
+        }
 
+        // Limpa a mensagem de carregamento e exibe o cartão
         statusMessage.textContent = '';
         saintCard.classList.remove('hidden');
 
@@ -114,23 +64,23 @@ async function buscarSanto(termoBusca) {
 
 // Escuta o clique no botão de busca
 searchBtn.addEventListener('click', () => {
-    const termo = saintInput.value.trim();
-    buscarSanto(termo);
+    const termo = saintInput.value;
+    buscarSantoWikipedia(termo);
 });
 
-// Escuta o evento "Enter" ao digitar na caixa de texto
+// Escuta a tecla "Enter" no campo de texto
 saintInput.addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
-        const termo = saintInput.value.trim();
-        buscarSanto(termo);
+        const termo = saintInput.value;
+        buscarSantoWikipedia(termo);
     }
 });
 
-// Escuta o clique nos botões de sugestão rápida
+// Escuta os cliques nas sugestões rápidas
 chips.forEach(chip => {
     chip.addEventListener('click', () => {
         const nomeSanto = chip.getAttribute('data-name');
         saintInput.value = nomeSanto;
-        buscarSanto(nomeSanto);
+        buscarSantoWikipedia(nomeSanto);
     });
 });
