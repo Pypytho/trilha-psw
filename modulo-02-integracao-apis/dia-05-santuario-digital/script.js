@@ -14,16 +14,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elemento) elemento.textContent = texto;
     }
 
-    // PALAVRAS OBRIGATÓRIAS: O resumo DEVE conter pelo menos UMA destas palavras/expressões
-    const TERMOS_SACROS_OBRIGATORIOS = [
-        'canonizad', 'beatificad', 'mártir', 'doutor da igreja', 
-        'santo católico', 'santa católica', 'festa litúrgica', 
-        'venerado', 'venerada', 'virgem e mártir', 'papa da igreja católica',
-        'bispo de', 'frade', 'freira', 'monge', 'padroeir'
+    // SEGUNDA CHECAGEM (CHECAGEM DA PÁGINA):
+    // O texto da Wikipédia OBRIGATORIAMENTE precisa conter ao menos UM destes termos específicos
+    const TERMOS_CANONIZACAO = [
+        'beatificad',      // pega beatificado, beatificada, beatificação
+        'canonizad',      // pega canonizado, canonizada, canonização
+        'papa da igreja', 
+        'santo católico', 
+        'santa católica', 
+        'doutor da igreja', 
+        'doutora da igreja',
+        'mártir católic',
+        'festa litúrgica'
     ];
 
-    // PALAVRAS PROIBIDAS: Se o resumo contiver QUALQUER uma destas, é descartado imediatamente
-    const TERMOS_SECULARES_PROIBIDOS = [
+    // BLOQUEIO ABSOLUTO DE TERMOS SECULARES OU ESPORTIVOS
+    const TERMOS_PROIBIDOS = [
         'futebol', 'clube', 'esporte', 'estádio', 'município', 'prefeitura',
         'físico', 'nobel', 'física', 'cientista', 'relatividade', 'televisão',
         'campeonato', 'associação atlética', 'empresa', 'político', 'deputado'
@@ -36,19 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const termo = termoBusca.trim();
-        setTexto(statusMessage, 'Pesquisando e validando no acervo...');
+        setTexto(statusMessage, 'Pesquisando e realizando dupla checagem...');
         if (saintCard) saintCard.classList.add('hidden');
 
         try {
             const termoLower = termo.toLowerCase();
 
-            // 1. CHECAGEM 1: Monta a query para priorizar o artigo do Santo
+            // 1. PRIMEIRA CHECAGEM: Pesquisa na Wikipédia priorizando hagiografia
             let queryBusca = termo;
             if (!termoLower.startsWith('são ') && !termoLower.startsWith('santo ') && !termoLower.startsWith('santa ') && !termoLower.startsWith('beato ') && !termoLower.startsWith('beata ')) {
                 queryBusca = `Santo ${termo}`;
             }
 
-            // Busca os 5 artigos mais relevantes da Wikipédia para essa query
             const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(queryBusca)}&format=json&origin=*`;
             const searchResponse = await fetch(searchUrl);
             if (!searchResponse.ok) throw new Error(`Falha de conexão com a Wikipédia.`);
@@ -58,10 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Nenhum resultado encontrado para "${termo}".`);
             }
 
+            // Pega os 5 primeiros resultados
             const resultados = searchData.query.search.slice(0, 5);
             let artigoAprovado = null;
 
-            // 2. CHECAGEM 2: Analisa o texto do resumo de cada artigo encontrado
+            // 2. SEGUNDA CHECAGEM (Verificação rigorosa na página encontrada)
             for (const item of resultados) {
                 const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
                 const summaryResponse = await fetch(summaryUrl);
@@ -77,36 +83,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tituloLower = artigo.title.toLowerCase();
                 const extractLower = (artigo.extract || '').toLowerCase();
 
-                // TESTE A: Verificação Anti-Falso-Positivo (Se for time, física, Einstein, etc., BLOQUEIA)
-                const ehSecular = TERMOS_SECULARES_PROIBIDOS.some(termoProibido => 
-                    tituloLower.includes(termoProibido) || extractLower.includes(termoProibido)
+                // Passo A: Se tiver qualquer termo secular (futebol, físico, nobel), REPROVA
+                const ehSecular = TERMOS_PROIBIDOS.some(proibido => 
+                    tituloLower.includes(proibido) || extractLower.includes(proibido)
                 );
 
                 if (ehSecular) {
-                    continue; // Pula para o próximo resultado sem aprovar
+                    continue; // Pula para o próximo artigo sem aprovar
                 }
 
-                // TESTE B: Verificação de Santidade Real
-                const ehSantoVerdadeiro = TERMOS_SACROS_OBRIGATORIOS.some(termoSacro => 
+                // Passo B: Checagem exata da página por palavras de canonização/veneração
+                const ehValidoPorCanonizacao = TERMOS_CANONIZACAO.some(termoSacro => 
                     extractLower.includes(termoSacro)
-                ) || (
-                    (tituloLower.startsWith('são ') || tituloLower.startsWith('santo ') || tituloLower.startsWith('santa ')) &&
-                    (extractLower.includes('igreja') || extractLower.includes('católic') || extractLower.includes('cristã'))
                 );
 
-                // Se passou nos dois testes da Checagem 2, o artigo está validado!
-                if (ehSantoVerdadeiro) {
+                // Se passou no Passo A e no Passo B, o artigo é aprovado!
+                if (ehValidoPorCanonizacao) {
                     artigoAprovado = artigo;
                     break;
                 }
             }
 
-            // Se nenhum dos 5 resultados passou no filtro rigoroso
+            // Se nenhum dos artigos passou na Segunda Checagem:
             if (!artigoAprovado) {
-                throw new Error(`"${termo}" não foi identificado como um Santo ou Santa no acervo.`);
+                throw new Error(`"${termo}" não foi validado como Santo, Papa ou figura beatificada no acervo.`);
             }
 
-            // 3. RENDERIZAÇÃO: Exibe o card aprovado
+            // 3. RENDERIZAÇÃO
             setTexto(saintName, artigoAprovado.title);
             setTexto(saintBio, artigoAprovado.extract || 'Resumo não disponível.');
 
