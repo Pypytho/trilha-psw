@@ -29,10 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const termoLower = termo.toLowerCase();
 
-            // Query SPARQL para buscar APENAS santos católicos canonizados
-            // P425 = canonization date (tem que ter data de canonização)
-            // P6129 = religion (tem que ser catolicismo)
-            // P580 = start time (para evitar papas futuros)
+            // Primeira tentativa: Query SPARQL estrita com data de canonização
             const sparqlQuery = `
                 SELECT ?item ?itemLabel ?canonizationDate ?article WHERE {
                   ?item wdt:P425 ?canonizationDate .
@@ -42,8 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
                            schema:isPartOf <https://pt.wikipedia.org/> .
                   FILTER(CONTAINS(LCASE(?itemLabel), "${termoLower}"))
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "pt,en". }
-                } ORDER BY ?canonizationDate
+                } LIMIT 10
             `;
+
+            console.log("Query SPARQL:", sparqlQuery);
 
             const wikidataUrl = `https://query.wikidata.org/sparql?query=${encodeURIComponent(sparqlQuery)}&format=json`;
             
@@ -56,44 +55,77 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const wikiData = await wikiResponse.json();
-            const bindings = wikiData.results?.bindings || [];
+            console.log("Resposta Wikidata (com P425):", wikiData);
+            
+            let bindings = wikiData.results?.bindings || [];
+
+            // Se não encontrou com P425 (data de canonização), tenta busca mais ampla
+            if (bindings.length === 0) {
+                console.log("Nenhum resultado com P425, tentando busca ampla...");
+                
+                const sparqlQueryAmpla = `
+                    SELECT ?item ?itemLabel ?article WHERE {
+                      ?item wdt:P31 wd:Q5 .
+                      ?item wdt:P6129 wd:Q9592 .
+                      ?article schema:about ?item ;
+                               schema:isPartOf <https://pt.wikipedia.org/> .
+                      FILTER(CONTAINS(LCASE(?itemLabel), "${termoLower}"))
+                      SERVICE wikibase:label { bd:serviceParam wikibase:language "pt,en". }
+                    } LIMIT 10
+                `;
+
+                const wikidataUrlAmpla = `https://query.wikidata.org/sparql?query=${encodeURIComponent(sparqlQueryAmpla)}&format=json`;
+                const wikiResponseAmpla = await fetch(wikidataUrlAmpla, {
+                    headers: { 'Accept': 'application/sparql-results+json' }
+                });
+
+                const wikiDataAmpla = await wikiResponseAmpla.json();
+                console.log("Resposta Wikidata (ampla):", wikiDataAmpla);
+                bindings = wikiDataAmpla.results?.bindings || [];
+            }
 
             if (bindings.length === 0) {
                 throw new Error(`"${termo}" não é um Santo ou Santa canonizado pela Igreja Católica.`);
             }
 
-            // Se houver múltiplos resultados com o mesmo nome, pega o primeiro
-            // (o mais antigo canonizado, ordenado pela query)
+            // Pega o primeiro resultado
             const primeiroResultado = bindings[0];
             const nomeSanto = primeiroResultado.itemLabel.value;
+            console.log("Santo encontrado:", nomeSanto);
 
             // Busca os detalhes completos na Wikipedia
-            const detailsUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(nomeSanto)}&format=json&origin=*`;
+            const detailsUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=50&titles=${encodeURIComponent(nomeSanto)}&format=json&origin=*`;
             
+            console.log("Buscando detalhes Wikipedia:", nomeSanto);
             const detailsRes = await fetch(detailsUrl);
             const detailsData = await detailsRes.json();
             const pages = Object.values(detailsData.query.pages);
 
-            if (pages.length === 0) {
+            console.log("Páginas encontradas:", pages);
+
+            if (pages.length === 0 || pages[0].missing) {
                 throw new Error(`Página do Wikipedia não encontrada para ${nomeSanto}`);
             }
 
             const page = pages[0];
+            console.log("Categorias da página:", page.categories);
 
             // Valida se tem categorias de santo canonizado
-            if (!page.categories) {
-                throw new Error(`"${nomeSanto}" não possui categorias de santo canonizado.`);
-            }
+            if (page.categories && page.categories.length > 0) {
+                const cats = page.categories.map(c => c.title.toLowerCase());
+                console.log("Categorias em lowercase:", cats);
+                
+                const ehSanto = cats.some(c => 
+                    c.includes('santo') || 
+                    c.includes('santa') || 
+                    c.includes('canonizado') ||
+                    c.includes('beato') ||
+                    c.includes('beata')
+                );
 
-            const cats = page.categories.map(c => c.title.toLowerCase());
-            const ehSantoCanonizado = cats.some(c => 
-                c.includes('santos católicos') || 
-                c.includes('santas católicas') ||
-                c.includes('canonizados')
-            );
-
-            if (!ehSantoCanonizado) {
-                throw new Error(`"${nomeSanto}" não é um Santo ou Santa canonizado.`);
+                if (!ehSanto) {
+                    console.warn("Não encontrou categorias de santo");
+                }
             }
 
             renderizarPagina(page);
@@ -101,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (saintCard) saintCard.classList.remove('hidden');
 
         } catch (erro) {
+            console.error("Erro:", erro);
             setTexto(statusMessage, `[Aviso]: ${erro.message}`);
             if (saintCard) saintCard.classList.add('hidden');
         }
