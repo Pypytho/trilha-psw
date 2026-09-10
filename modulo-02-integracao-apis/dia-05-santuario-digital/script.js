@@ -20,77 +20,87 @@ async function buscarSantoWikipedia(termoBusca) {
     saintCard.classList.add('hidden');
 
     try {
-        // ETAPA 1: Busca o título exato do artigo mais relevante usando a API de busca da Wikipedia
+        // ETAPA 1: Busca o termo via API de pesquisa da Wikipedia
         const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termoBusca.trim())}&format=json&origin=*`;
         
+        console.log('Enviando requisição para:', searchUrl);
         const searchResponse = await fetch(searchUrl);
+
         if (!searchResponse.ok) {
-            throw new Error('Falha na conexão com os servidores da Wikipedia.');
+            throw new Error(`Erro na busca da Wikipedia (Status: ${searchResponse.status})`);
         }
 
         const searchData = await searchResponse.json();
 
-        // Se a busca não retornar nenhum resultado
-        if (!searchData.query.search || searchData.query.search.length === 0) {
+        // Checa se a estrutura de dados veio correta
+        if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
             throw new Error(`Nenhum artigo encontrado para "${termoBusca}". Tente digitar de outra forma.`);
         }
 
-        // Pega o título exato do primeiro resultado da pesquisa
         const tituloExato = searchData.query.search[0].title;
+        console.log('Título encontrado:', tituloExato);
 
-        // ETAPA 2: Busca o resumo e imagem do artigo usando o título exato encontrado
-        const summaryUrl = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(tituloExato)}`;
+        // ETAPA 2: Busca o resumo usando o endpoint de API tradicional (com suporte a CORS e origin=*)
+        const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(tituloExato)}&format=json&origin=*`;
+        
         const summaryResponse = await fetch(summaryUrl);
 
         if (!summaryResponse.ok) {
-            throw new Error('Não foi possível carregar o resumo do artigo.');
+            throw new Error(`Erro ao carregar dados do artigo (Status: ${summaryResponse.status})`);
         }
 
         const summaryData = await summaryResponse.json();
+        const pages = summaryData.query.pages;
+        const pageId = Object.keys(pages)[0];
 
-        // ETAPA 3: Renderiza as informações na tela
-        saintName.textContent = summaryData.title;
-        saintBio.textContent = summaryData.extract || 'Nenhum resumo em texto disponível para este artigo.';
+        if (pageId === "-1") {
+            throw new Error('Página não encontrada no acervo da Wikipedia.');
+        }
 
-        // Imagem principal
-        if (summaryData.thumbnail && summaryData.thumbnail.source) {
-            saintImg.src = summaryData.thumbnail.source;
+        const artigo = pages[pageId];
+
+        // ETAPA 3: Injeta no HTML
+        saintName.textContent = artigo.title;
+        saintBio.textContent = artigo.extract || 'Nenhum resumo em texto disponível para este artigo.';
+
+        // Imagem
+        if (artigo.original && artigo.original.source) {
+            saintImg.src = artigo.original.source;
             saintImg.style.display = 'block';
         } else {
             saintImg.style.display = 'none';
         }
 
-        // Link oficial para a página
-        if (summaryData.content_urls && summaryData.content_urls.desktop) {
-            saintLink.href = summaryData.content_urls.desktop.page;
+        // Link oficial
+        if (artigo.fullurl) {
+            saintLink.href = artigo.fullurl;
         }
 
         statusMessage.textContent = '';
         saintCard.classList.remove('hidden');
 
     } catch (erro) {
-        statusMessage.textContent = erro.message;
-        console.error('Erro na API:', erro);
+        // Exibe o erro real diretamente na tela
+        statusMessage.textContent = `[Erro]: ${erro.message}`;
+        console.error('Detalhes do Erro:', erro);
     }
 }
 
-// Escuta o clique no botão
-searchBtn.addEventListener('click', () => {
-    buscarSantoWikipedia(saintInput.value);
-});
+// Event Listeners
+if (searchBtn) {
+    searchBtn.addEventListener('click', () => buscarSantoWikipedia(saintInput.value));
+}
 
-// Escuta o Enter no input
-saintInput.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') {
-        buscarSantoWikipedia(saintInput.value);
-    }
-});
+if (saintInput) {
+    saintInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') buscarSantoWikipedia(saintInput.value);
+    });
+}
 
-// Escuta o clique nos chips
 chips.forEach(chip => {
     chip.addEventListener('click', () => {
-        const nomeSanto = chip.getAttribute('data-name');
-        saintInput.value = nomeSanto;
-        buscarSantoWikipedia(nomeSanto);
+        const nome = chip.getAttribute('data-name');
+        saintInput.value = nome;
+        buscarSantoWikipedia(nome);
     });
 });
