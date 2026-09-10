@@ -20,95 +20,111 @@ async function buscarSantoWikipedia(termoBusca) {
         return;
     }
 
-    setTexto(statusMessage, 'Pesquisando no acervo de santos...');
+    const termo = termoBusca.trim();
+    setTexto(statusMessage, 'Pesquisando na biblioteca de santos...');
     if (saintCard) saintCard.classList.add('hidden');
 
     try {
-        // ETAPA 1: Busca os artigos mais relevantes na Wikipedia acrescentando "Santo" à consulta para ranqueamento
-        const consultaTratada = `Santo ${termoBusca.trim()}`;
-        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(consultaTratada)}&format=json&origin=*`;
-        
-        const searchResponse = await fetch(searchUrl);
-        if (!searchResponse.ok) throw new Error(`Erro na conexão (Status: ${searchResponse.status})`);
+        // ETAPA 1: Tenta buscar pelo termo combinado com palavras-chave hagiográficas
+        // Montamos consultas alternativas para garantir que o resultado seja um santo
+        const consultas = [
+            `Santo ${termo}`,
+            `Santa ${termo}`,
+            `São ${termo}`,
+            `${termo} (santo)`,
+            `${termo} (santa)`,
+            termo
+        ];
 
-        const searchData = await searchResponse.json();
+        let artigoEncontrado = null;
 
-        if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
-            throw new Error(`Nenhum resultado encontrado para "${termoBusca}".`);
-        }
+        for (const query of consultas) {
+            const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
+            const searchResponse = await fetch(searchUrl);
+            if (!searchResponse.ok) continue;
 
-        // Analisa os primeiros 5 resultados da pesquisa para encontrar um que seja REALMENTE um Santo/Santa
-        const resultados = searchData.query.search;
-        let artigoValido = null;
-        let dadosArtigo = null;
+            const searchData = await searchResponse.json();
+            if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) continue;
 
-        for (const item of resultados) {
-            // ETAPA 2: Requisita o resumo, imagem E as categorias da página
-            const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=50&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
-            
-            const summaryResponse = await fetch(summaryUrl);
-            if (!summaryResponse.ok) continue;
+            // Percorre os 3 primeiros resultados para verificar se algum é um Santo
+            for (const item of searchData.query.search.slice(0, 3)) {
+                const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info|categories&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=50&titles=${encodeURIComponent(item.title)}&format=json&origin=*`;
+                const summaryResponse = await fetch(summaryUrl);
+                if (!summaryResponse.ok) continue;
 
-            const summaryData = await summaryResponse.json();
-            const pages = summaryData.query.pages;
-            const pageId = Object.keys(pages)[0];
+                const summaryData = await summaryResponse.json();
+                const pages = summaryData.query.pages;
+                const pageId = Object.keys(pages)[0];
 
-            if (pageId === "-1") continue;
+                if (pageId === "-1") continue;
 
-            const artigo = pages[pageId];
-            const categorias = artigo.categories ? artigo.categories.map(c => c.title.toLowerCase()) : [];
+                const artigo = pages[pageId];
+                const tituloLower = artigo.title.toLowerCase();
+                const extractLower = (artigo.extract || '').toLowerCase();
 
-            // Validação estrita por Categoria ou Título
-            const ehSantoPorCategoria = categorias.some(cat => 
-                cat.includes('santos') || 
-                cat.includes('santas') || 
-                cat.includes('mártires') || 
-                cat.includes('papas') || 
-                cat.includes('beatos') || 
-                cat.includes('místicos')
-            );
+                // Monta a lista de categorias em formato normalizado (sem "Categoria:")
+                const categorias = artigo.categories 
+                    ? artigo.categories.map(c => c.title.toLowerCase()) 
+                    : [];
 
-            const tituloLower = artigo.title.toLowerCase();
-            const ehSantoPorTitulo = tituloLower.startsWith('santo ') || 
-                                     tituloLower.startsWith('santa ') || 
-                                     tituloLower.startsWith('são ') || 
-                                     tituloLower.includes(' (santo)') || 
-                                     tituloLower.includes(' (santa)');
+                // 1. Checagem por Categoria
+                const ehSantoPorCategoria = categorias.some(cat => 
+                    cat.includes('santo') || 
+                    cat.includes('santa') || 
+                    cat.includes('mártir') || 
+                    cat.includes('papa') || 
+                    cat.includes('beato') ||
+                    cat.includes('canonizado') ||
+                    cat.includes('religioso')
+                );
 
-            if (ehSantoPorCategoria || ehSantoPorTitulo) {
-                artigoValido = artigo;
-                dadosArtigo = artigo;
-                break; // Achou o santo correto! Sai do loop.
+                // 2. Checagem por Título
+                const ehSantoPorTitulo = 
+                    tituloLower.startsWith('santo ') || 
+                    tituloLower.startsWith('santa ') || 
+                    tituloLower.startsWith('são ') || 
+                    tituloLower.includes('(santo)') || 
+                    tituloLower.includes('(santa)');
+
+                // 3. Checagem por Termos no Resumo
+                const termosSacros = ['santo', 'santa', 'canonizad', 'mártir', 'virgem', 'beatificad', 'igreja católica', 'bispo'];
+                const ehSantoPorTexto = termosSacros.some(t => extractLower.includes(t));
+
+                if (ehSantoPorCategoria || ehSantoPorTitulo || (ehSantoPorTexto && (tituloLower.includes(termo.toLowerCase())))) {
+                    artigoEncontrado = artigo;
+                    break;
+                }
             }
+
+            if (artigoEncontrado) break;
         }
 
-        // Se nenhum dos resultados for um Santo ou Santa
-        if (!dadosArtigo) {
-            throw new Error(`O termo "${termoBusca}" não corresponde a um Santo ou Santa reconhecido na Wikipedia.`);
+        if (!artigoEncontrado) {
+            throw new Error(`Nenhum santo ou santa encontrado para "${termo}". Certifique-se de digitar o nome correto.`);
         }
 
-        // ETAPA 3: Renderiza os dados validados no DOM
-        setTexto(saintName, dadosArtigo.title);
-        setTexto(saintBio, dadosArtigo.extract || 'Nenhum resumo em texto disponível para este artigo.');
+        // ETAPA 2: Renderização dos dados
+        setTexto(saintName, artigoEncontrado.title);
+        setTexto(saintBio, artigoEncontrado.extract || 'Nenhum resumo em texto disponível para este artigo.');
 
         if (saintImg) {
-            if (dadosArtigo.original && dadosArtigo.original.source) {
-                saintImg.src = dadosArtigo.original.source;
+            if (artigoEncontrado.original && artigoEncontrado.original.source) {
+                saintImg.src = artigoEncontrado.original.source;
                 saintImg.style.display = 'block';
             } else {
                 saintImg.style.display = 'none';
             }
         }
 
-        if (saintLink && dadosArtigo.fullurl) {
-            saintLink.href = dadosArtigo.fullurl;
+        if (saintLink && artigoEncontrado.fullurl) {
+            saintLink.href = artigoEncontrado.fullurl;
         }
 
         setTexto(statusMessage, '');
         if (saintCard) saintCard.classList.remove('hidden');
 
     } catch (erro) {
-        setTexto(statusMessage, `[Filtro de Segurança]: ${erro.message}`);
+        setTexto(statusMessage, `[Aviso]: ${erro.message}`);
     }
 }
 
