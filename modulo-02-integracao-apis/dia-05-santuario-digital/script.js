@@ -16,12 +16,86 @@ function setTexto(elemento, texto) {
         elemento.textContent = texto;
     }
 }
-
 async function buscarSantoWikipedia(termoBusca) {
     if (!termoBusca || !termoBusca.trim()) {
         setTexto(statusMessage, 'Por favor, digite o nome de um santo.');
         return;
     }
+
+    setTexto(statusMessage, 'Pesquisando na biblioteca de santos...');
+    if (saintCard) saintCard.classList.add('hidden');
+
+    try {
+        // 1. Força a busca a incluir prefixos de santidade
+        const termoComFiltro = `(Santo OR Santa OR São) ${termoBusca.trim()}`;
+        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termoComFiltro)}&format=json&origin=*`;
+        
+        const searchResponse = await fetch(searchUrl);
+        if (!searchResponse.ok) {
+            throw new Error(`Erro na conexão (Status: ${searchResponse.status})`);
+        }
+
+        const searchData = await searchResponse.json();
+
+        if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
+            throw new Error(`Nenhum santo ou santa encontrado para "${termoBusca}".`);
+        }
+
+        const tituloExato = searchData.query.search[0].title;
+
+        // 2. Obtém os detalhes do artigo
+        const summaryUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(tituloExato)}&format=json&origin=*`;
+        
+        const summaryResponse = await fetch(summaryUrl);
+        if (!summaryResponse.ok) {
+            throw new Error(`Erro ao carregar o artigo (Status: ${summaryResponse.status})`);
+        }
+
+        const summaryData = await summaryResponse.json();
+        const pages = summaryData.query.pages;
+        const pageId = Object.keys(pages)[0];
+
+        if (pageId === "-1") {
+            throw new Error('Página não encontrada no acervo.');
+        }
+
+        const artigo = pages[pageId];
+
+        // 3. Validação de segurança sobre o tema
+        const palavrasChave = ['santo', 'santa', 'são', 'mártir', 'bispo', 'virgem', 'beato', 'beata', 'igreja', 'canonizad', 'papa', 'religios'];
+        const resumoLower = artigo.extract ? artigo.extract.toLowerCase() : '';
+        const tituloLower = artigo.title.toLowerCase();
+
+        const ehSanto = palavrasChave.some(palavra => tituloLower.includes(palavra) || resumoLower.includes(palavra));
+
+        if (!ehSanto) {
+            throw new Error(`Nenhum registro hagiográfico encontrado para "${termoBusca}". Certifique-se de digitar o nome de um santo ou santa.`);
+        }
+
+        // 4. Injeta no DOM
+        setTexto(saintName, artigo.title);
+        setTexto(saintBio, artigo.extract || 'Nenhum resumo disponível para este artigo.');
+
+        if (saintImg) {
+            if (artigo.original && artigo.original.source) {
+                saintImg.src = artigo.original.source;
+                saintImg.style.display = 'block';
+            } else {
+                saintImg.style.display = 'none';
+            }
+        }
+
+        if (saintLink && artigo.fullurl) {
+            saintLink.href = artigo.fullurl;
+        }
+
+        setTexto(statusMessage, '');
+        if (saintCard) saintCard.classList.remove('hidden');
+
+    } catch (erro) {
+        setTexto(statusMessage, `[Aviso]: ${erro.message}`);
+    }
+}
 
     setTexto(statusMessage, 'Pesquisando na Wikipedia...');
     if (saintCard) saintCard.classList.add('hidden');
