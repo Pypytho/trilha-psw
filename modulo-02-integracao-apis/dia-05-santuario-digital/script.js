@@ -1,74 +1,100 @@
-async function buscarSantoWikipedia(termoBusca) {
-    if (!termoBusca || !termoBusca.trim()) {
-        setTexto(statusMessage, 'Por favor, digite o nome de um santo.');
-        return;
+document.addEventListener('DOMContentLoaded', () => {
+    const saintInput = document.querySelector('#saint-input');
+    const searchBtn = document.querySelector('#search-btn');
+    const statusMessage = document.querySelector('#status-message');
+    const chips = document.querySelectorAll('.chip');
+
+    const saintCard = document.querySelector('#saint-card');
+    const saintImg = document.querySelector('#saint-img');
+    const saintName = document.querySelector('#saint-name');
+    const saintBio = document.querySelector('#saint-bio');
+    const saintLink = document.querySelector('#saint-link');
+
+    function setTexto(elemento, texto) {
+        if (elemento) elemento.textContent = texto;
     }
 
-    const termo = termoBusca.trim();
-    setTexto(statusMessage, 'Validando no banco de dados hagiográfico...');
-    if (saintCard) saintCard.classList.add('hidden');
-
-    // Padrões de categoria que indicam santidade/beatificação reconhecida
-    const PADROES_SANTO = [
-        /\bsantos?\s+(d[aeo]|dos|das)\b/i,      // "Santos da Argélia", "Santo do Império..."
-        /\bsantas?\s+(d[aeo]|dos|das)\b/i,      // "Santas de Portugal"
-        /\bbeatos?\s+(d[aeo]|dos|das)\b/i,      // "Beatos da Itália"
-        /\bbeatas?\s+(d[aeo]|dos|das)\b/i,
-        /doutores? da igreja/i,
-        /padres? da igreja/i,
-        /^papas\b/i,
-        /m[aá]rtires? (católicos|cristãos)/i,
-        /canoniza[çc][õo]es/i,
-        /beatifica[çc][õo]es/i,
-        /venera[çc][ãa]o cat[óo]lica/i
-    ];
-
-    function ehSanto(categorias) {
-        if (!categorias || categorias.length === 0) return false;
-        const cats = categorias.map(c => c.title.replace(/^Categoria:/i, ''));
-        return cats.some(c => PADROES_SANTO.some(padrao => padrao.test(c)));
-    }
-
-    async function buscarCategoriasCompletas(titulo) {
-        let categorias = [];
-        let clcontinue = null;
-        let pageBase = null;
-
-        do {
-            let url = `https://pt.wikipedia.org/w/api.php?action=query&prop=categories|extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&cllimit=500&titles=${encodeURIComponent(titulo)}&format=json&origin=*`;
-            if (clcontinue) url += `&clcontinue=${encodeURIComponent(clcontinue)}`;
-
-            const res = await fetch(url);
-            const data = await res.json();
-            const page = Object.values(data.query.pages)[0];
-
-            if (!pageBase) pageBase = page;
-            if (page?.categories) categorias = categorias.concat(page.categories);
-
-            clcontinue = data.continue?.clcontinue || null;
-        } while (clcontinue);
-
-        if (pageBase) pageBase.categories = categorias;
-        return pageBase;
-    }
-
-    try {
-        let queryBusca = termo;
-        const termoLower = termo.toLowerCase();
-        if (!termoLower.startsWith('são ') && !termoLower.startsWith('santo ') && !termoLower.startsWith('santa ') && !termoLower.startsWith('beato ') && !termoLower.startsWith('beata ')) {
-            queryBusca = `Santo ${termo}`;
+    async function buscarWikipedia(termoBusca) {
+        if (!termoBusca || !termoBusca.trim()) {
+            setTexto(statusMessage, 'Por favor, digite um termo para buscar.');
+            return;
         }
 
-        const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(queryBusca)}&format=json&origin=*`;
-        const searchRes = await fetch(searchUrl);
-        const searchData = await searchRes.json();
+        const termo = termoBusca.trim();
+        setTexto(statusMessage, 'Buscando na Wikipédia...');
+        if (saintCard) saintCard.classList.add('hidden');
 
-        console.log('[DEBUG] Candidatos:', searchData.query?.search?.map(c => c.title));
+        try {
+            // 1. Busca o artigo correspondente na Wikipédia
+            const searchUrl = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termo)}&format=json&origin=*`;
+            const searchResponse = await fetch(searchUrl);
+            if (!searchResponse.ok) throw new Error('Falha na conexão com a Wikipédia.');
 
-        const candidatos = searchData.query?.search?.slice(0, 6) || [];
+            const searchData = await searchResponse.json();
+            if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
+                throw new Error(`Nenhum resultado encontrado para "${termo}".`);
+            }
 
-        for (const cand of candidatos) {
-            const page = await buscarCategoriasCompletas(cand.title);
-            console.log(`[DEBUG] Categorias de "${cand.title}":`, page?.categories?.map(c => c.title));
+            const primeiroResultado = searchData.query.search[0];
 
-            if (page && ehSanto(page
+            // 2. Obtém os detalhes (resumo, imagem e link) da página encontrada
+            const detailsUrl = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original&inprop=url&titles=${encodeURIComponent(primeiroResultado.title)}&format=json&origin=*`;
+            const detailsResponse = await fetch(detailsUrl);
+            if (!detailsResponse.ok) throw new Error('Erro ao carregar detalhes do artigo.');
+
+            const detailsData = await detailsResponse.json();
+            const pages = detailsData.query.pages;
+            const pageId = Object.keys(pages)[0];
+
+            if (pageId === "-1") {
+                throw new Error('Artigo não encontrado.');
+            }
+
+            const artigo = pages[pageId];
+
+            // 3. Renderiza os dados no card
+            setTexto(saintName, artigo.title);
+            setTexto(saintBio, artigo.extract || 'Resumo em texto indisponível.');
+
+            if (saintImg) {
+                if (artigo.original && artigo.original.source) {
+                    saintImg.src = artigo.original.source;
+                    saintImg.style.display = 'block';
+                } else {
+                    saintImg.style.display = 'none';
+                }
+            }
+
+            if (saintLink && artigo.fullurl) {
+                saintLink.href = artigo.fullurl;
+            }
+
+            setTexto(statusMessage, '');
+            if (saintCard) saintCard.classList.remove('hidden');
+
+        } catch (erro) {
+            setTexto(statusMessage, `[Aviso]: ${erro.message}`);
+        }
+    }
+
+    // Event Listeners
+    if (searchBtn) {
+        searchBtn.addEventListener('click', () => {
+            if (saintInput) buscarWikipedia(saintInput.value);
+        });
+    }
+
+    if (saintInput) {
+        saintInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') buscarWikipedia(saintInput.value);
+        });
+    }
+
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const nome = chip.getAttribute('data-name');
+            if (saintInput) saintInput.value = nome;
+            buscarWikipedia(nome);
+        });
+    });
+});
