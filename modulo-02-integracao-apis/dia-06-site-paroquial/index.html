@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paróquia Nossa Senhora de Copacabana e Santa Rosa de Lima</title>
+    
+    <!-- Google Fonts (Cinzel para títulos no estilo vaticano, Lora para leitura solene) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            /* Paleta Vatican + Copacabana + Santa Rosa */
+            --primary-navy: #132238;      /* Azul Nobre / Manto Mariano */
+            --accent-gold: #c5a059;       /* Dourado Sacro */
+            --light-gold: #f4ece1;        /* Marfim Warm */
+            --rose-soft: #d8a4a6;         /* Rosa Seco (Santa Rosa) */
+            --bg-cream: #faf8f5;          /* Fundo Clássico */
+            --text-dark: #2c2c2c;         /* Texto Principal */
+            --text-muted: #5f6368;
+            --white: #ffffff;
+            --font-title: 'Cinzel', serif;
+            --font-body: 'Lora', serif;
+            --font-sans: 'Montserrat', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-dark);
+            font-family: var(--font-body);
+            line-height: 1.7;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* BARRA SUPERIOR INSTITUCIONAL */
+        .top-bar {
+            background-color: var(--primary-navy);
+            color: var(--accent-gold);
+            text-align: center;
+            padding: 8px 15px;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--accent-gold);
+        }
+
+        /* HEADER E NAVEGAÇÃO */
+        header {
+            background-color: var(--white);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-icon {
+            font-size: 2.2rem;
+            color: var(--accent-gold);
+        }
+
+        .brand-text h1 {
+            font-family: var(--font-title);
+            font-size: 1.15rem;
+            color: var(--primary-navy);
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .brand-text span {
+            font-family: var(--font-sans);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        nav a {
+            color: var(--primary-navy);
+            transition: color 0.3s;
+            position: relative;
+            padding-bottom: 4px;
+        }
+
+        nav a:hover {
+            color: var(--accent-gold);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background-color: var(--accent-gold);
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* HERO BANNER */
+        .hero {
+            background: linear-gradient(rgba(19, 34, 56, 0.85), rgba(19, 34, 56, 0.85)), 
+                        url('https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=1600&q=80') center/cover;
+            color: var(--white);
+            text-align: center;
+            padding: 100px 20px;
+            border-bottom: 4px solid var(--accent-gold);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-cross {
+            font-size: 2.5rem;
+            color: var(--accent-gold);
+            margin-bottom: 15px;
+        }
+
+        .hero h2 {
+            font-family: var(--font-title);
+            font-size: 2.4rem;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--light-gold);
+            margin-bottom: 30px;
+        }
+
+        .btn-gold {
+            display: inline-block;
+            background-color: var(--accent-gold);
+            color: var(--primary-navy);
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            padding: 12px 28px;
+            border-radius: 2px;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .btn-gold:hover {
+            background-color: var(--light-gold);
+            transform: translateY(-2px);
+        }
+
+        /* SEÇÕES GERAIS */
+        section {
+            padding: 70px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title h3 {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            color: var(--primary-navy);
+            letter-spacing: 1px;
+        }
+
+        .section-title .divider {
+            width: 60px;
+            height: 2px;
+            background-color: var(--accent-gold);
+            margin: 12px auto;
+        }
+
+        /* AVISOS PAROQUIAIS */
+        .announcements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .card-aviso {
+            background-color: var(--white);
+            border: 1px solid #eae2d6;
+            border-top: 3px solid var(--accent-gold);
+            padding: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            transition: transform 0.3s;
+        }
+
+        .card-aviso:hover {
+            transform: translateY(-4px);
+        }
+
+        .card-date {
+            font-family: var(--font-sans);
+            font-size: 0.75rem;
+            color: var(--accent-gold);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .card-aviso h4 {
+            font-family: var(--font-title);
+            font-size: 1.15rem;
+            color: var(--primary-navy);
+            margin-bottom: 10px;
+        }
+
+        .card-aviso p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        /* HORÁRIOS DE MISSAS E CONFISSÕES */
+        .schedules-container {
+            background-color: var(--white);
+            border: 1px solid #e2d8c9;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.04);
+        }
+
+        .schedule-box {
+            padding: 35px;
+            border-right: 1px solid #eee;
+        }
+
+        .schedule-box:last-child {
+            border-right: none;
+        }
+
+        .schedule-box h4 {
+            font-family: var(--font-title);
+            color: var(--primary-navy);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .schedule-box h4 i {
+            color: var(--accent-gold);
+        }
+
+        .schedule-list {
+            list-style: none;
+        }
+
+        .schedule-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #e8e8e8;
+            font-size: 0.95rem;
+        }
+
+        .schedule-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* CAMPANHA DO DÍZIMO */
+        .dizimo-banner {
+            background-color: var(--primary-navy);
+            color: var(--white);
+            border-left: 5px solid var(--rose-soft);
+            padding: 50px;
+            margin: 40px auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .dizimo-text h3 {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            color: var(--light-gold);
+            margin-bottom: 15px;
+        }
+
+        .dizimo-text p {
+            font-size: 1rem;
+            color: #d1d5db;
+            margin-bottom: 20px;
+        }
+
+        .pix-box {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--accent-gold);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .pix-box h5 {
+            font-family: var(--font-sans);
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .pix-key {
+            font-family: var(--font-sans);
+            font-weight: bold;
+            background: var(--white);
+            color: var(--primary-navy);
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            border-radius: 3px;
+            user-select: all;
+        }
+
+        /* PADROEIROS */
+        .patrons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .patron-card {
+            background: var(--white);
+            padding: 30px;
+            border: 1px solid #eae2d6;
+            text-align: center;
+        }
+
+        .patron-card h4 {
+            font-family: var(--font-title);
+            color: var(--primary-navy);
+            font-size: 1.3rem;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        /* CONTATO E LOCALIZAÇÃO */
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .info-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .info-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .info-list i {
+            color: var(--accent-gold);
+            font-size: 1.2rem;
+            margin-top: 3px;
+        }
+
+        .contact-form {
+            background-color: var(--white);
+            padding: 30px;
+            border: 1px solid #eae2d6;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-family: var(--font-sans);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--primary-navy);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: 1px solid var(--accent-gold);
+        }
+
+        /* RODAPÉ SOLENE */
+        footer {
+            background-color: var(--primary-navy);
+            color: var(--light-gold);
+            text-align: center;
+            padding: 40px 20px 20px;
+            border-top: 3px solid var(--accent-gold);
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+        }
+
+        .footer-logo {
+            font-family: var(--font-title);
+            font-size: 1.2rem;
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+
+        .footer-sub {
+            color: var(--accent-gold);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 768px) {
+            .header-container { flex-direction: column; text-align: center; gap: 15px; }
+            nav ul { flex-wrap: wrap; justify-content: center; gap: 15px; }
+            .dizimo-banner { grid-template-columns: 1fr; padding: 30px; }
+            .patrons-grid, .contact-container { grid-template-columns: 1fr; }
+            .hero h2 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA DE TOPO INSTITUCIONAL -->
+    <div class="top-bar">
+        Arquidiocese de São Sebastião do Rio de Janeiro &bull; Decanato 2
+    </div>
+
+    <!-- CABEÇALHO DA PARÓQUIA -->
+    <header>
+        <div class="header-container">
+            <div class="brand">
+                <i class="fa-solid fa-church brand-icon"></i>
+                <div class="brand-text">
+                    <h1>Nossa Senhora de Copacabana</h1>
+                    <span>e Santa Rosa de Lima</span>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#inicio">Início</a></li>
+                    <li><a href="#avisos">Avisos</a></li>
+                    <li><a href="#horarios">Horários</a></li>
+                    <li><a href="#dizimo">Dízimo</a></li>
+                    <li><a href="#padroeiros">Padroeiros</a></li>
+                    <li><a href="#contato">Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- BANNER DE BOAS-VINDAS -->
+    <section id="inicio" class="hero" style="padding: 0; max-width: 100%;">
+        <div class="hero" style="width: 100%;">
+            <div class="hero-content">
+                <div class="hero-cross"><i class="fa-solid fa-cross"></i></div>
+                <h2>Seja bem-vindo à nossa comunidade de fé</h2>
+                <p>"Onde há amor e caridade, Deus aí está."</p>
+                <a href="#horarios" class="btn-gold">Horários de Missa</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- MURAL DE AVISOS PAROQUIAIS -->
+    <section id="avisos">
+        <div class="section-title">
+            <h3>Avisos da Comunidade</h3>
+            <div class="divider"></div>
+            <p style="font-style: italic; color: var(--text-muted);">Comunicados e eventos paroquiais da semana</p>
+        </div>
+
+        <div class="announcements-grid">
+            <article class="card-aviso">
+                <div class="card-date">18 de Setembro, 2026</div>
+                <h4>Missa de Inscrição da Catequese</h4>
+                <p>Neste domingo, na Missa das 10h, teremos o envio e bênção dos novos catequisandos e seus catequistas.</p>
+            </article>
+
+            <article class="card-aviso">
+                <div class="card-date">25 de Setembro, 2026</div>
+                <h4>Encontro de Casais com Cristo (ECC)</h4>
+                <p>Estão abertas as inscrições na secretaria paroquial para o próximo encontro de casais da comunidade.</p>
+            </article>
+
+            <article class="card-aviso">
+                <div class="card-date">Todas as Quintas-Feiras</div>
+                <h4>Adoração ao Santíssimo Sacramento</h4>
+                <p>Exposição do Santíssimo a partir das 15h, encerrando com a bênção solene antes da Missa das 18h.</p>
+            </article>
+        </div>
+    </section>
+
+    <!-- HORÁRIOS DAS CELEBRAÇÕES -->
+    <section id="horarios" style="padding-top: 0;">
+        <div class="section-title">
+            <h3>Horários das Celebrações</h3>
+            <div class="divider"></div>
+        </div>
+
+        <div class="schedules-container">
+            <div class="schedule-box">
+                <h4><i class="fa-solid fa-bell"></i> Santa Missa</h4>
+                <ul class="schedule-list">
+                    <li><span>Segunda a Sexta</span> <strong>07:30 e 18:00</strong></li>
+                    <li><span>Sábado</span> <strong>08:00 e 17:00</strong></li>
+                    <li><span>Domingo</span> <strong>08:00, 10:00, 18:00 e 19:30</strong></li>
+                </ul>
+            </div>
+
+            <div class="schedule-box">
+                <h4><i class="fa-solid fa-hands-praying"></i> Confissões</h4>
+                <ul class="schedule-list">
+                    <li><span>Terça a Sexta</span> <strong>16:00 - 17:30</strong></li>
+                    <li><span>Sábado</span> <strong>09:00 - 11:00</strong></li>
+                    <li><span>Atendimento Pastoral</span> <strong>Agendar na Secretaria</strong></li>
+                </ul>
+            </div>
+
+            <div class="schedule-box">
+                <h4><i class="fa-solid fa-door-open"></i> Secretaria</h4>
+                <ul class="schedule-list">
+                    <li><span>Segunda a Sexta</span> <strong>08:00 - 17:00</strong></li>
+                    <li><span>Sábado</span> <strong>08:00 - 12:00</strong></li>
+                    <li><span>Domingo</span> <strong>Fechado</strong></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- CAMPANHA DO DÍZIMO -->
+    <div id="dizimo" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        <div class="dizimo-banner">
+            <div class="dizimo-text">
+                <h3>Seja um Dizimista Paroquial</h3>
+                <p>O Dízimo é um ato de fé, gratidão e co-responsabilidade com a evangelização, com a manutenção dos trabalhos de caridade da comunidade e com o zelo da Casa de Deus.</p>
+                <a href="#contato" class="btn-gold" style="background: var(--light-gold); color: var(--primary-navy);">Cadastrar no Dízimo</a>
+            </div>
+            <div class="pix-box">
+                <h5>Oferta / Dízimo via PIX</h5>
+                <p style="font-size: 0.8rem; color: #ddd; margin-bottom: 10px;">Chave CNPJ da Paróquia:</p>
+                <div class="pix-key">00.000.000/0001-00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DEVOÇÃO AOS PADROEIROS -->
+    <section id="padroeiros">
+        <div class="section-title">
+            <h3>Nossos Padroeiros</h3>
+            <div class="divider"></div>
+        </div>
+
+        <div class="patrons-grid">
+            <div class="patron-card">
+                <i class="fa-solid fa-crown" style="font-size: 2rem; color: var(--accent-gold);"></i>
+                <h4>Nossa Senhora de Copacabana</h4>
+                <p style="font-size: 0.95rem; color: var(--text-muted);">
+                    Devoção de origem boliviana que batizou nosso bairro. Mãe de misericórdia que nos acolhe sob seu manto protetor e nos conduz a seu Filho Jesus Cristo.
+                </p>
+            </div>
+
+            <div class="patron-card">
+                <i class="fa-solid fa-spa" style="font-size: 2rem; color: var(--rose-soft);"></i>
+                <h4>Santa Rosa de Lima</h4>
+                <p style="font-size: 0.95rem; color: var(--text-muted);">
+                    Primeira santa canonizada da América Latina. Padroeira dos floristas e da América do Sul, modelo de oração intensa, penitência e amor dedicado aos pobres.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTATO E SECRETARIA -->
+    <section id="contato" style="padding-bottom: 90px;">
+        <div class="section-title">
+            <h3>Contato e Localização</h3>
+            <div class="divider"></div>
+        </div>
+
+        <div class="contact-container">
+            <div>
+                <h4 style="font-family: var(--font-title); color: var(--primary-navy); margin-bottom: 15px;">Fale Conosco</h4>
+                <p style="color: var(--text-muted);">Estamos à disposição para atendê-lo. Entre em contato com nossa secretaria paroquial para dúvidas, intenções de missa e sacramentos.</p>
+
+                <ul class="info-list">
+                    <li>
+                        <i class="fa-solid fa-location-dot"></i>
+                        <div>
+                            <strong>Endereço:</strong><br>
+                            Rua Hilário de Gouveia, Copacabana - Rio de Janeiro - RJ
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-phone"></i>
+                        <div>
+                            <strong>Telefone / WhatsApp:</strong><br>
+                            (21) 2255-0000
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-envelope"></i>
+                        <div>
+                            <strong>E-mail:</strong><br>
+                            secretaria@paroquiacopacabana.org.br
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="contact-form">
+                <form onsubmit="event.preventDefault(); alert('Mensagem enviada com sucesso! A secretaria responderá em breve.');">
+                    <div class="form-group">
+                        <label for="nome">Nome Completo</label>
+                        <input type="text" id="nome" required placeholder="Seu nome">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">E-mail ou WhatsApp</label>
+                        <input type="text" id="email" required placeholder="Seu contato">
+                    </div>
+                    <div class="form-group">
+                        <label for="mensagem">Mensagem / Intenção de Missa</label>
+                        <textarea id="mensagem" rows="4" required placeholder="Como podemos ajudar?"></textarea>
+                    </div>
+                    <button type="submit" class="btn-gold" style="width: 100%; border: none; cursor: pointer;">Enviar Mensagem</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- RODAPÉ -->
+    <footer>
+        <div class="footer-logo">Paróquia Nossa Senhora de Copacabana e Santa Rosa de Lima</div>
+        <div class="footer-sub">Copacabana &bull; Rio de Janeiro &bull; RJ</div>
+        <p style="opacity: 0.7; font-size: 0.8rem;">&copy; 2026 Todos os direitos reservados. Projeto Paroquial.</p>
+    </footer>
+
+</body>
+</html>
