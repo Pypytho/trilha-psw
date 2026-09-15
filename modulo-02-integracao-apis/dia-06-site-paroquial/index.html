@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paróquia Nossa Senhora de Copacabana e Santa Rosa de Lima</title>
     
-    <!-- Google Fonts (Cinzel para títulos no estilo vaticano, Lora para leitura solene) -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
@@ -15,7 +15,6 @@
 
     <style>
         :root {
-            /* Paleta Vatican + Copacabana + Santa Rosa */
             --primary-navy: #132238;      /* Azul Nobre / Manto Mariano */
             --accent-gold: #c5a059;       /* Dourado Sacro */
             --light-gold: #f4ece1;        /* Marfim Warm */
@@ -72,7 +71,7 @@
         .header-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 15px 20px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -84,22 +83,26 @@
             gap: 15px;
         }
 
-        .brand-icon {
-            font-size: 2.2rem;
-            color: var(--accent-gold);
+        .brand-logo {
+            height: 65px;
+            width: auto;
+            border-radius: 50%;
+            border: 1px solid var(--accent-gold);
+            object-fit: cover;
         }
 
         .brand-text h1 {
             font-family: var(--font-title);
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             color: var(--primary-navy);
             letter-spacing: 1px;
             font-weight: 700;
+            line-height: 1.2;
         }
 
         .brand-text span {
             font-family: var(--font-sans);
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -108,7 +111,7 @@
         nav ul {
             display: flex;
             list-style: none;
-            gap: 25px;
+            gap: 22px;
             font-family: var(--font-sans);
             font-size: 0.85rem;
             font-weight: 500;
@@ -143,8 +146,8 @@
 
         /* HERO BANNER */
         .hero {
-            background: linear-gradient(rgba(19, 34, 56, 0.85), rgba(19, 34, 56, 0.85)), 
-                        url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Virgen_de_Copacabana.jpg/1200px-Virgen_de_Copacabana.jpg') center/cover;
+            background: linear-gradient(rgba(19, 34, 56, 0.88), rgba(19, 34, 56, 0.88)), 
+                        url('nossa_senhora.jpg') center/cover;
             color: var(--white);
             text-align: center;
             padding: 110px 20px;
@@ -157,14 +160,14 @@
         }
 
         .hero-cross {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             color: var(--accent-gold);
             margin-bottom: 15px;
         }
 
         .hero h2 {
             font-family: var(--font-title);
-            font-size: 2.4rem;
+            font-size: 2.3rem;
             margin-bottom: 15px;
             letter-spacing: 1px;
         }
@@ -363,7 +366,7 @@
             user-select: all;
         }
 
-        /* PADROEIROS COM IMAGENS */
+        /* PADROEIROS COM IMAGENS LOCAIS */
         .patrons-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -385,22 +388,21 @@
 
         .patron-img-wrapper {
             width: 100%;
-            height: 320px;
+            height: 380px;
             overflow: hidden;
             border-bottom: 3px solid var(--accent-gold);
-            position: relative;
+            background-color: #2b2b2b;
         }
 
         .patron-img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            object-position: top center;
+            object-fit: contain;
             transition: transform 0.5s;
         }
 
         .patron-card:hover .patron-img {
-            transform: scale(1.04);
+            transform: scale(1.03);
         }
 
         .patron-body {
@@ -519,9 +521,9 @@
     <header>
         <div class="header-container">
             <div class="brand">
-                <i class="fa-solid fa-church brand-icon"></i>
+                <img src="logo.jpg" alt="Logo Paróquia Nossa Senhora de Copacabana e Santa Rosa de Lima" class="brand-logo">
                 <div class="brand-text">
-                    <h1>Nossa Senhora de Copacabana</h1>
+                    <h1>Paróquia Nossa Senhora de Copacabana</h1>
                     <span>e Santa Rosa de Lima</span>
                 </div>
             </div>
@@ -632,7 +634,7 @@
         </div>
     </div>
 
-    <!-- DEVOÇÃO AOS PADROEIROS COM IMAGENS -->
+    <!-- DEVOÇÃO AOS PADROEIROS -->
     <section id="padroeiros">
         <div class="section-title">
             <h3>Nossas Padroeiros</h3>
@@ -642,25 +644,24 @@
         <div class="patrons-grid">
             <div class="patron-card">
                 <div class="patron-img-wrapper">
-                    <img class="patron-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Virgen_de_Copacabana.jpg/800px-Virgen_de_Copacabana.jpg" alt="Nossa Senhora de Copacabana">
+                    <img class="patron-img" src="nossa_senhora.jpg" alt="Nossa Senhora de Copacabana">
                 </div>
                 <div class="patron-body">
                     <h4>Nossa Senhora de Copacabana</h4>
                     <p style="font-size: 0.95rem; color: var(--text-muted);">
-                        Devoção que batizou o bairro carioca. A venerada imagem de Nossa Senhora de Copacabana é símbolo de acolhimento, proteção e refúgio para as famílias da comunidade.
+                        Venerada no altar de nossa matriz, a imagem de Nossa Senhora de Copacabana acolhe sob sua proteção e luz todas as famílias de nossa comunidade.
                     </p>
                 </div>
             </div>
 
             <div class="patron-card">
                 <div class="patron-img-wrapper">
-                    <div style="border-bottom-color: var(--rose-soft);"></div>
-                    <img class="patron-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Santa_Rosa_de_Lima_por_Claudio_Coello.jpg/800px-Santa_Rosa_de_Lima_por_Claudio_Coello.jpg" alt="Santa Rosa de Lima">
+                    <img class="patron-img" src="santa_rosa.jpg" alt="Santa Rosa de Lima">
                 </div>
                 <div class="patron-body">
                     <h4>Santa Rosa de Lima</h4>
                     <p style="font-size: 0.95rem; color: var(--text-muted);">
-                        Primeira santa das Américas e co-padroeira de nossa paróquia. Exemplo sublime de vida interior, pureza, penitência e dedicado serviço aos desamparados.
+                        Primeira santa das Américas e co-padroeira de nossa paróquia. Exemplo de doação interior, caridade e dedicado amor aos mais necessitados.
                     </p>
                 </div>
             </div>
