@@ -144,10 +144,10 @@
         /* HERO BANNER */
         .hero {
             background: linear-gradient(rgba(19, 34, 56, 0.85), rgba(19, 34, 56, 0.85)), 
-                        url('https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=1600&q=80') center/cover;
+                        url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Virgen_de_Copacabana.jpg/1200px-Virgen_de_Copacabana.jpg') center/cover;
             color: var(--white);
             text-align: center;
-            padding: 100px 20px;
+            padding: 110px 20px;
             border-bottom: 4px solid var(--accent-gold);
         }
 
@@ -363,26 +363,55 @@
             user-select: all;
         }
 
-        /* PADROEIROS */
+        /* PADROEIROS COM IMAGENS */
         .patrons-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            gap: 35px;
         }
 
         .patron-card {
             background: var(--white);
-            padding: 30px;
             border: 1px solid #eae2d6;
             text-align: center;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            transition: transform 0.3s;
+        }
+
+        .patron-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .patron-img-wrapper {
+            width: 100%;
+            height: 320px;
+            overflow: hidden;
+            border-bottom: 3px solid var(--accent-gold);
+            position: relative;
+        }
+
+        .patron-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            transition: transform 0.5s;
+        }
+
+        .patron-card:hover .patron-img {
+            transform: scale(1.04);
+        }
+
+        .patron-body {
+            padding: 30px;
         }
 
         .patron-card h4 {
             font-family: var(--font-title);
             color: var(--primary-navy);
-            font-size: 1.3rem;
-            margin-top: 15px;
-            margin-bottom: 10px;
+            font-size: 1.35rem;
+            margin-bottom: 12px;
         }
 
         /* CONTATO E LOCALIZAÇÃO */
@@ -603,28 +632,37 @@
         </div>
     </div>
 
-    <!-- DEVOÇÃO AOS PADROEIROS -->
+    <!-- DEVOÇÃO AOS PADROEIROS COM IMAGENS -->
     <section id="padroeiros">
         <div class="section-title">
-            <h3>Nossos Padroeiros</h3>
+            <h3>Nossas Padroeiros</h3>
             <div class="divider"></div>
         </div>
 
         <div class="patrons-grid">
             <div class="patron-card">
-                <i class="fa-solid fa-crown" style="font-size: 2rem; color: var(--accent-gold);"></i>
-                <h4>Nossa Senhora de Copacabana</h4>
-                <p style="font-size: 0.95rem; color: var(--text-muted);">
-                    Devoção de origem boliviana que batizou nosso bairro. Mãe de misericórdia que nos acolhe sob seu manto protetor e nos conduz a seu Filho Jesus Cristo.
-                </p>
+                <div class="patron-img-wrapper">
+                    <img class="patron-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Virgen_de_Copacabana.jpg/800px-Virgen_de_Copacabana.jpg" alt="Nossa Senhora de Copacabana">
+                </div>
+                <div class="patron-body">
+                    <h4>Nossa Senhora de Copacabana</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">
+                        Devoção que batizou o bairro carioca. A venerada imagem de Nossa Senhora de Copacabana é símbolo de acolhimento, proteção e refúgio para as famílias da comunidade.
+                    </p>
+                </div>
             </div>
 
             <div class="patron-card">
-                <i class="fa-solid fa-spa" style="font-size: 2rem; color: var(--rose-soft);"></i>
-                <h4>Santa Rosa de Lima</h4>
-                <p style="font-size: 0.95rem; color: var(--text-muted);">
-                    Primeira santa canonizada da América Latina. Padroeira dos floristas e da América do Sul, modelo de oração intensa, penitência e amor dedicado aos pobres.
-                </p>
+                <div class="patron-img-wrapper">
+                    <div style="border-bottom-color: var(--rose-soft);"></div>
+                    <img class="patron-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Santa_Rosa_de_Lima_por_Claudio_Coello.jpg/800px-Santa_Rosa_de_Lima_por_Claudio_Coello.jpg" alt="Santa Rosa de Lima">
+                </div>
+                <div class="patron-body">
+                    <h4>Santa Rosa de Lima</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">
+                        Primeira santa das Américas e co-padroeira de nossa paróquia. Exemplo sublime de vida interior, pureza, penitência e dedicado serviço aos desamparados.
+                    </p>
+                </div>
             </div>
         </div>
     </section>
