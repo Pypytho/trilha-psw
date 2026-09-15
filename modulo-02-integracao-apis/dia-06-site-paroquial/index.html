@@ -240,7 +240,7 @@
             margin: 12px auto;
         }
 
-        /* CARDS DAS CRECHES (DESTAGUE NA HOME) */
+        /* CARDS DAS CRECHES (DESTAQUE NA HOME) */
         .creches-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -569,24 +569,112 @@
             color: var(--text-dark);
         }
 
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
+        /* COMPONENTE DE CARROSSEL INTERATIVO */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            height: 420px;
+            margin: 25px auto 35px auto;
+            overflow: hidden;
+            border-radius: 4px;
+            border: 3px solid var(--accent-gold);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            background-color: var(--primary-navy);
         }
 
-        .gallery-item {
-            height: 220px;
-            background-color: #e0e0e0;
-            border: 1px solid #ccc;
-            overflow: hidden;
+        .carousel-track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.4s ease-in-out;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(19, 34, 56, 0.75);
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            z-index: 10;
         }
 
-        .gallery-item img {
+        .carousel-btn:hover {
+            background-color: var(--accent-gold);
+            color: var(--primary-navy);
+        }
+
+        .carousel-btn.prev { left: 15px; }
+        .carousel-btn.next { right: 15px; }
+
+        .carousel-dots {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--accent-gold);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background-color: var(--accent-gold);
+            transform: scale(1.2);
+        }
+
+        /* GRADE DE FOTOS / MINIATURAS */
+        .gallery-grid-5 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .gallery-thumb {
+            height: 140px;
+            border: 1px solid var(--accent-gold);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .gallery-thumb:hover {
+            transform: scale(1.03);
+        }
+
+        .gallery-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -610,6 +698,7 @@
             .creches-grid, .patrons-grid, .contact-container, .dizimo-banner { grid-template-columns: 1fr; }
             .history-content { padding: 20px; }
             .hero h2 { font-size: 1.7rem; }
+            .carousel-container { height: 260px; }
         }
     </style>
 </head>
@@ -674,18 +763,18 @@
             <div class="creches-grid">
                 <!-- CARD CRECHE COPACABANA -->
                 <article class="creche-card">
-                    <img src="creche_copacabana.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Creche Copacabana" class="creche-card-img">
+                    <img src="copa1.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Creche Copacabana" class="creche-card-img">
                     <div class="creche-card-body">
                         <span class="badge-tag">Zona Sul &bull; Copacabana</span>
                         <h4>Creche Paroquial N. Sra. de Copacabana</h4>
-                        <p>Atendimento e acolhimento infantil dedicado às crianças do bairro de Copacabana, oferecendo educação, alimentação e formação cristã para famílias da região.</p>
+                        <p>Atendimento e acolhimento infantil dedicado às crianças do bairro de Copacabana, oferecendo educação, alimentação e formação cristã.</p>
                         <button onclick="navigateTo('creche-copacabana')" class="btn-gold">Conhecer Projeto <i class="fa-solid fa-arrow-right"></i></button>
                     </div>
                 </article>
 
                 <!-- CARD CASA DO POBRE (CAMPO GRANDE) -->
                 <article class="creche-card">
-                    <img src="casa_pobre.jpg" onerror="this.src='santa_rosa.jpg'" alt="Casa do Pobre Campo Grande" class="creche-card-img">
+                    <img src="campo1.jpg" onerror="this.src='santa_rosa.jpg'" alt="Casa do Pobre Campo Grande" class="creche-card-img">
                     <div class="creche-card-body">
                         <span class="badge-tag">Zona Oeste &bull; Desde 1932</span>
                         <h4>Creche da Casa do Pobre (Campo Grande)</h4>
@@ -882,6 +971,27 @@
 
         <section>
             <div class="history-content">
+                
+                <!-- CARROSSEL INTERATIVO CRECHE COPACABANA -->
+                <div class="carousel-container" id="carousel-copa">
+                    <div class="carousel-track">
+                        <div class="carousel-slide"><img src="copa1.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Creche Copacabana Foto 1"></div>
+                        <div class="carousel-slide"><img src="copa2.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Creche Copacabana Foto 2"></div>
+                        <div class="carousel-slide"><img src="copa3.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Creche Copacabana Foto 3"></div>
+                        <div class="carousel-slide"><img src="copa4.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Creche Copacabana Foto 4"></div>
+                        <div class="carousel-slide"><img src="copa5.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Creche Copacabana Foto 5"></div>
+                    </div>
+                    <button class="carousel-btn prev" onclick="moveSlide('carousel-copa', -1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="carousel-btn next" onclick="moveSlide('carousel-copa', 1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    <div class="carousel-dots">
+                        <span class="dot active" onclick="setSlide('carousel-copa', 0)"></span>
+                        <span class="dot" onclick="setSlide('carousel-copa', 1)"></span>
+                        <span class="dot" onclick="setSlide('carousel-copa', 2)"></span>
+                        <span class="dot" onclick="setSlide('carousel-copa', 3)"></span>
+                        <span class="dot" onclick="setSlide('carousel-copa', 4)"></span>
+                    </div>
+                </div>
+
                 <h4>Nossa Missão no Bairro</h4>
                 <p>A Creche Paroquial de Nossa Senhora de Copacabana atua no atendimento direto às crianças e famílias da região, oferecendo um ambiente seguro, acolhedor e pautado nos valores cristãos de amor, respeito e solidariedade.</p>
                 <p>Com equipe dedicada, garantimos acompanhamento pedagógico, nutrição adequada e atividades recreativas que auxiliam no desenvolvimento integral dos pequenos, permitindo que os pais trabalhem com tranquilidade.</p>
@@ -889,19 +999,14 @@
                 <h4>Atividades e Desenvolvimento</h4>
                 <p>Nossas rotinas incluem educação infantil, momentos de espiritualidade adaptados para a infância, oficinas lúdicas e acompanhamento nutricional completo durante todo o período letivo.</p>
 
-                <h4>Galeria de Fotos da Creche</h4>
-                <div class="gallery-grid">
-                    <div class="gallery-item">
-                        <img src="creche_copacabana.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Espaço da Creche">
-                    </div>
-                    <div class="gallery-item" style="background:#e8ecef; display:flex; flex-direction:column; justify-content:center; text-align:center; color:#666;">
-                        <i class="fa-solid fa-camera" style="font-size: 2rem; margin-bottom: 8px;"></i>
-                        <span>Salas de Aula</span>
-                    </div>
-                    <div class="gallery-item" style="background:#e8ecef; display:flex; flex-direction:column; justify-content:center; text-align:center; color:#666;">
-                        <i class="fa-solid fa-child-reaching" style="font-size: 2rem; margin-bottom: 8px;"></i>
-                        <span>Área Recreativa</span>
-                    </div>
+                <h4>Galeria de Fotos (5 Registros)</h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Clique em uma das fotos abaixo para ir direto no carrossel:</p>
+                <div class="gallery-grid-5">
+                    <div class="gallery-thumb" onclick="setSlide('carousel-copa', 0)"><img src="copa1.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Thumb 1"></div>
+                    <div class="gallery-thumb" onclick="setSlide('carousel-copa', 1)"><img src="copa2.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Thumb 2"></div>
+                    <div class="gallery-thumb" onclick="setSlide('carousel-copa', 2)"><img src="copa3.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Thumb 3"></div>
+                    <div class="gallery-thumb" onclick="setSlide('carousel-copa', 3)"><img src="copa4.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Thumb 4"></div>
+                    <div class="gallery-thumb" onclick="setSlide('carousel-copa', 4)"><img src="copa5.jpg" onerror="this.src='nossa_senhora.jpg'" alt="Thumb 5"></div>
                 </div>
 
                 <div style="margin-top: 40px; text-align: center; background: var(--bg-cream); padding: 30px; border: 1px solid #e0d8cb;">
@@ -926,6 +1031,26 @@
         <section>
             <div class="history-content">
                 
+                <!-- CARROSSEL INTERATIVO CASA DO POBRE -->
+                <div class="carousel-container" id="carousel-campo">
+                    <div class="carousel-track">
+                        <div class="carousel-slide"><img src="campo1.jpg" onerror="this.src='santa_rosa.jpg'" alt="Casa do Pobre Campo Grande Foto 1"></div>
+                        <div class="carousel-slide"><img src="campo2.jpg" onerror="this.src='santa_rosa.jpg'" alt="Casa do Pobre Campo Grande Foto 2"></div>
+                        <div class="carousel-slide"><img src="campo3.jpg" onerror="this.src='santa_rosa.jpg'" alt="Casa do Pobre Campo Grande Foto 3"></div>
+                        <div class="carousel-slide"><img src="campo4.jpg" onerror="this.src='santa_rosa.jpg'" alt="Casa do Pobre Campo Grande Foto 4"></div>
+                        <div class="carousel-slide"><img src="campo5.jpg" onerror="this.src='santa_rosa.jpg'" alt="Casa do Pobre Campo Grande Foto 5"></div>
+                    </div>
+                    <button class="carousel-btn prev" onclick="moveSlide('carousel-campo', -1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="carousel-btn next" onclick="moveSlide('carousel-campo', 1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    <div class="carousel-dots">
+                        <span class="dot active" onclick="setSlide('carousel-campo', 0)"></span>
+                        <span class="dot" onclick="setSlide('carousel-campo', 1)"></span>
+                        <span class="dot" onclick="setSlide('carousel-campo', 2)"></span>
+                        <span class="dot" onclick="setSlide('carousel-campo', 3)"></span>
+                        <span class="dot" onclick="setSlide('carousel-campo', 4)"></span>
+                    </div>
+                </div>
+
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="number">1932</div>
@@ -946,47 +1071,42 @@
                 </div>
 
                 <h4>História e Fundação (08 de Setembro de 1932)</h4>
-                <p>A <strong>Casa do Pobre de Nossa Senhora de Copacabana</strong> foi fundada em 8 de setembro de 1932 — data festiva da Natividade da Virgem Maria —, por uma comissão de cidadãos dedicados composta pelo Conde de Paranaguá, Dr. Annibal Porto, Cônego Bento Monteiro do Amaral, Bernardo Mascarenhas, Jesse Augusto de Almeida, Benjamim Ferreira Guimarães, Ladisláo Alves de Souza, Dr. Dulphe Pinheiro Machado e Dr. Cunshee de Abranches[span_2](start_span)[span_2](end_span).</p>
-                <p>Com a aprovação do então Cardeal Arcebispo do Rio de Janeiro, Dom Sebastião Leme, a instituição nasceu com o objetivo estatutário de socorrer os necessitados, unificar os trabalhos de caridade da Paróquia de Nossa Senhora de Copacabana e Santa Rosa de Lima e criar a Escola e Creche Paroquial[span_3](start_span)[span_3](end_span).</p>
+                <p>A <strong>Casa do Pobre de Nossa Senhora de Copacabana</strong> foi fundada em 8 de setembro de 1932 — data festiva da Natividade da Virgem Maria —, por uma comissão de cidadãos dedicados composta pelo Conde de Paranaguá, Dr. Annibal Porto, Cônego Bento Monteiro do Amaral, Bernardo Mascarenhas, Jesse Augusto de Almeida, Benjamim Ferreira Guimarães, Ladisláo Alves de Souza, Dr. Dulphe Pinheiro Machado e Dr. Cunshee de Abranches[span_0](start_span)[span_0](end_span).</p>
+                <p>Com a aprovação do então Cardeal Arcebispo do Rio de Janeiro, Dom Sebastião Leme, a instituição nasceu com o objetivo estatutário de socorrer os necessitados, unificar os trabalhos de caridade da Paróquia de Nossa Senhora de Copacabana e Santa Rosa de Lima e criar a Escola e Creche Paroquial[span_1](start_span)[span_1](end_span).</p>
 
                 <h4>Braço Social da Paróquia e Reconhecimento Oficial</h4>
-                <p>Sob a notável liderança de seus fundadores e dos Monsenhores Joaquim Soares de Oliveira Alvim e Manoel da Assunção Castelo Branco, a Casa do Pobre tornou-se o reconhecido "braço social" da Mitra-Paróquia[span_4](start_span)[span_4](end_span). O impacto filantrópico resultou no reconhecimento de Utilidade Pública nos três níveis governamentais[span_5](start_span)[span_5](end_span):</p>
+                <p>Sob a notável liderança de seus fundadores e dos Monsenhores Joaquim Soares de Oliveira Alvim e Manoel da Assunção Castelo Branco, a Casa do Pobre tornou-se o reconhecido "braço social" da Mitra-Paróquia[span_2](start_span)[span_2](end_span). O impacto filantrópico resultou no reconhecimento de Utilidade Pública nos três níveis governamentais[span_3](start_span)[span_3](end_span):</p>
                 <ul>
-                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Utilidade Pública Municipal:</strong> Concedida pelo Prefeito Interventor Dr. Pedro Ernesto (Decreto nº 4.629 de 1934)[span_6](start_span)[span_6](end_span).</li>
-                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Utilidade Pública Federal:</strong> Cadastrada no Conselho Nacional de Assistência Social em 1952[span_7](start_span)[span_7](end_span).</li>
-                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Utilidade Pública Estadual:</strong> Reconhecida pelo Governo do Estado do Rio de Janeiro (Decreto-Lei nº 179/1975 e SEASDH nº 267)[span_8](start_span)[span_8](end_span).</li>
+                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Utilidade Pública Municipal:</strong> Concedida pelo Prefeito Interventor Dr. Pedro Ernesto (Decreto nº 4.629 de 1934)[span_4](start_span)[span_4](end_span).</li>
+                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Utilidade Pública Federal:</strong> Cadastrada no Conselho Nacional de Assistência Social em 1952[span_5](start_span)[span_5](end_span).</li>
+                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Utilidade Pública Estadual:</strong> Reconhecida pelo Governo do Estado do Rio de Janeiro (Decreto-Lei nº 179/1975 e SEASDH nº 267)[span_6](start_span)[span_6](end_span).</li>
                 </ul>
-                <p style="margin-top: 10px;">Atualmente, a instituição é detentora do <strong>Certificado de Entidades Beneficentes de Assistência Social (CEBAS-Educação)</strong>, garantido pela Portaria Nº 828[span_9](start_span)[span_9](end_span).</p>
+                <p style="margin-top: 10px;">Atualmente, a instituição é detentora do <strong>Certificado de Entidades Beneficentes de Assistência Social (CEBAS-Educação)</strong>, garantido pela Portaria Nº 828[span_7](start_span)[span_7](end_span).</p>
 
                 <h4>Atuação Atual: Creche, Pré-Escola e Bolsas de Estudo</h4>
-                <p>Em 2018, para expandir o alcance comunitário, a instituição implantou a modalidade de Pré-Escola (Portaria E/SUBE/GRE N. 604)[span_10](start_span)[span_10](end_span). Desde a criação da Pré-Escola, já foram concedidas centenas de bolsas gratuitas para crianças em situação de vulnerabilidade socioeconômica[span_11](start_span)[span_11](end_span).</p>
-                <p>Na gestão atual do <strong>Monsenhor Aroldo</strong>, já foram concedidas cerca de 800 bolsas de estudo[span_12](start_span)[span_12](end_span). Em 2024, a instituição destinou 50 bolsas para a Pré-Escola I e 79 bolsas para o Maternal I e II, garantindo acolhimento digno e educação de qualidade[span_13](start_span)[span_13](end_span).</p>
+                <p>Em 2018, para expandir o alcance comunitário, a instituição implantou a modalidade de Pré-Escola (Portaria E/SUBE/GRE N. 604)[span_8](start_span)[span_8](end_span). Desde a criação da Pré-Escola, já foram concedidas centenas de bolsas gratuitas para crianças em situação de vulnerabilidade socioeconômica[span_9](start_span)[span_9](end_span).</p>
+                <p>Na gestão atual do <strong>Monsenhor Aroldo</strong>, já foram concedidas cerca de 800 bolsas de estudo[span_10](start_span)[span_10](end_span). Em 2024, a instituição destinou 50 bolsas para a Pré-Escola I e 79 bolsas para o Maternal I e II, garantindo acolhimento digno e educação de qualidade[span_11](start_span)[span_11](end_span).</p>
 
                 <h4>Parcerias Sociais de Longa Data</h4>
-                <p>A Casa do Pobre também atua em sólida rede de cooperação fraterna[span_14](start_span)[span_14](end_span):</p>
+                <p>A Casa do Pobre também atua em sólida rede de cooperação fraterna[span_12](start_span)[span_12](end_span):</p>
                 <ul>
-                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Comunidade Católica Maranáta:</strong> Apoio no cuidado de residentes dependentes químicos em sítio próprio em Bangu[span_15](start_span)[span_15](end_span).</li>
-                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Casa da Criança (Senador Camará):</strong> Parceria de mais de 35 anos voltada ao acolhimento de crianças em processo de adoção ou vítimas de vulnerabilidade[span_16](start_span)[span_16](end_span).</li>
+                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Comunidade Católica Maranáta:</strong> Apoio no cuidado de residentes dependentes químicos em sítio próprio em Bangu[span_13](start_span)[span_13](end_span).</li>
+                    <li style="margin-left: 20px; margin-bottom: 5px;"><strong>Casa da Criança (Senador Camará):</strong> Parceria de mais de 35 anos voltada ao acolhimento de crianças em processo de adoção ou vítimas de vulnerabilidade[span_14](start_span)[span_14](end_span).</li>
                 </ul>
 
-                <h4>Galeria de Fotos da Casa do Pobre</h4>
-                <div class="gallery-grid">
-                    <div class="gallery-item">
-                        <img src="casa_pobre.jpg" onerror="this.src='santa_rosa.jpg'" alt="Casa do Pobre Foto">
-                    </div>
-                    <div class="gallery-item" style="background:#e8ecef; display:flex; flex-direction:column; justify-content:center; text-align:center; color:#666;">
-                        <i class="fa-solid fa-graduation-cap" style="font-size: 2rem; margin-bottom: 8px;"></i>
-                        <span>Salas de Pré-Escola</span>
-                    </div>
-                    <div class="gallery-item" style="background:#e8ecef; display:flex; flex-direction:column; justify-content:center; text-align:center; color:#666;">
-                        <i class="fa-solid fa-heart" style="font-size: 2rem; margin-bottom: 8px;"></i>
-                        <span>Atendimento Comunitário</span>
-                    </div>
+                <h4>Galeria de Fotos da Casa do Pobre (5 Registros)</h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Clique em uma das fotos abaixo para ir direto no carrossel:</p>
+                <div class="gallery-grid-5">
+                    <div class="gallery-thumb" onclick="setSlide('carousel-campo', 0)"><img src="campo1.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 1"></div>
+                    <div class="gallery-thumb" onclick="setSlide('carousel-campo', 1)"><img src="campo2.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 2"></div>
+                    <div class="gallery-thumb" onclick="setSlide('carousel-campo', 2)"><img src="campo3.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 3"></div>
+                    <div class="gallery-thumb" onclick="setSlide('carousel-campo', 3)"><img src="campo4.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 4"></div>
+                    <div class="gallery-thumb" onclick="setSlide('carousel-campo', 4)"><img src="campo5.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 5"></div>
                 </div>
 
                 <div style="margin-top: 40px; text-align: center; background: var(--bg-cream); padding: 30px; border: 1px solid #e0d8cb;">
                     <h4 style="margin-top: 0; border: none; padding: 0;">Apoie a Casa do Pobre</h4>
-                    <p>Ajude a manter as centenas de bolsas de estudo gratuitas para as crianças do Maternal e Pré-Escola. Colabore com o dízimo paroquial ou entre em contato com a secretaria[span_17](start_span)[span_17](end_span).</p>
+                    <p>Ajude a manter as centenas de bolsas de estudo gratuitas para as crianças do Maternal e Pré-Escola. Colabore com o dízimo paroquial ou entre em contato com a secretaria[span_15](start_span)[span_15](end_span).</p>
                     <button onclick="navigateTo('home', 'contato')" class="btn-gold">Saiba Como Doar</button>
                 </div>
 
@@ -1001,20 +1121,18 @@
         <p style="opacity: 0.7; font-size: 0.8rem;">&copy; 2026 Todos os direitos reservados. Projeto Paroquial Social.</p>
     </footer>
 
-    <!-- SCRIPT DE NAVEGAÇÃO ENTRE PÁGINAS DENTRO DO SITE -->
+    <!-- SCRIPTS DE NAVEGAÇÃO E CARROSSEL -->
     <script>
+        // NAVEGAÇÃO ENTRE PÁGINAS (HOME / DEDICADAS)
         function navigateTo(viewName, targetElementId = null) {
-            // Oculta todas as telas
             const views = document.querySelectorAll('.page-view');
             views.forEach(v => v.classList.remove('active'));
 
-            // Exibe a tela desejada
             const selectedView = document.getElementById('view-' + viewName);
             if (selectedView) {
                 selectedView.classList.add('active');
             }
 
-            // Rola a tela suavemente para o topo ou elemento específico
             if (targetElementId) {
                 setTimeout(() => {
                     const el = document.getElementById(targetElementId);
@@ -1025,6 +1143,55 @@
             } else {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+        }
+
+        // LÓGICA DOS CARROSSEIS DE FOTOS
+        const carouselStates = {
+            'carousel-copa': 0,
+            'carousel-campo': 0
+        };
+
+        function moveSlide(carouselId, direction) {
+            const container = document.getElementById(carouselId);
+            const slides = container.querySelectorAll('.carousel-slide');
+            let currentIndex = carouselStates[carouselId] || 0;
+
+            currentIndex += direction;
+            if (currentIndex < 0) currentIndex = slides.length - 1;
+            if (currentIndex >= slides.length) currentIndex = 0;
+
+            carouselStates[carouselId] = currentIndex;
+            updateCarouselUI(carouselId);
+        }
+
+        function setSlide(carouselId, slideIndex) {
+            carouselStates[carouselId] = slideIndex;
+            updateCarouselUI(carouselId);
+
+            // Rola suavemente até o carrossel se a pessoa clicar nas miniaturas abaixo
+            const container = document.getElementById(carouselId);
+            if(container) {
+                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function updateCarouselUI(carouselId) {
+            const container = document.getElementById(carouselId);
+            if(!container) return;
+
+            const track = container.querySelector('.carousel-track');
+            const dots = container.querySelectorAll('.dot');
+            const index = carouselStates[carouselId] || 0;
+
+            track.style.transform = `translateX(-${index * 100}%)`;
+
+            dots.forEach((dot, idx) => {
+                if (idx === index) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
         }
     </script>
 
