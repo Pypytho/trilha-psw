@@ -46,7 +46,7 @@
             color: inherit;
         }
 
-        /* BARRA SUPERIOR INSTITUCIONAL & IDIOMAS */
+        /* BARRA SUPERIOR INSTITUCIONAL E IDIOMAS */
         .top-bar {
             background-color: var(--primary-navy);
             color: var(--accent-gold);
@@ -332,7 +332,28 @@
             flex-grow: 1;
         }
 
-        /* AVISOS PAROQUIAIS */
+        /* AVISOS PAROQUIAIS & MÊS DA BÍBLIA */
+        .bible-header-card {
+            background-color: var(--primary-navy);
+            color: var(--white);
+            border: 2px solid var(--accent-gold);
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .bible-header-card h4 {
+            font-family: var(--font-title);
+            font-size: 1.5rem;
+            color: var(--light-gold);
+            margin-bottom: 8px;
+        }
+
+        .bible-header-card p {
+            font-size: 0.95rem;
+            color: #d1d5db;
+        }
+
         .announcements-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -345,13 +366,15 @@
             border-top: 3px solid var(--accent-gold);
             padding: 22px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
         }
 
         .card-date {
             font-family: var(--font-sans);
             font-size: 0.75rem;
             color: var(--accent-gold);
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             margin-bottom: 8px;
         }
@@ -360,7 +383,22 @@
             font-family: var(--font-title);
             font-size: 1.1rem;
             color: var(--primary-navy);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        .card-aviso p {
+            font-size: 0.92rem;
+            color: var(--text-dark);
+            flex-grow: 1;
+        }
+
+        .speaker-tag {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px dashed #eee;
+            font-style: italic;
         }
 
         /* HORÁRIOS DE MISSAS */
@@ -829,30 +867,59 @@
             </div>
         </section>
 
-        <!-- AVISOS PAROQUIAIS -->
+        <!-- AVISOS PAROQUIAIS - MÊS DA BÍBLIA -->
         <section id="avisos" style="padding-top: 10px;">
             <div class="section-title">
                 <h3 class="lang-text" data-pt="Avisos da Comunidade" data-en="Community Announcements" data-es="Avisos Comunitarios">Avisos da Comunidade</h3>
                 <div class="divider"></div>
             </div>
 
+            <!-- CARTÃO DE DESTAQUE DO MÊS DA BÍBLIA -->
+            <div class="bible-header-card">
+                <i class="fa-solid fa-book-bible" style="font-size: 2rem; color: var(--accent-gold); margin-bottom: 10px;"></i>
+                <h4 class="lang-text" data-pt="Mês da Bíblia &bull; Setembro de 2026" data-en="Bible Month &bull; September 2026" data-es="Mes de la Biblia &bull; Septiembre de 2026">Mês da Bíblia &bull; Setembro de 2026</h4>
+                <p class="lang-text" data-pt="Fundamentos Bíblicos e Patrísticos da Fé da Igreja" data-en="Biblical and Patristic Foundations of the Church's Faith" data-es="Fundamentos Bíblicos y Patrísticos de la Fe de la Iglesia">Fundamentos Bíblicos e Patrísticos da Fé da Igreja</p>
+                <p style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;" class="lang-text" data-pt="Encontros aos Sábados, das 16h às 17h &bull; Sala 1 (3º Andar)" data-en="Saturday Meetings, 4 PM to 5 PM &bull; Room 1 (3rd Floor)" data-es="Encuentros los Sábados, 16 hs a 17 hs &bull; Sala 1 (3º Piso)">Encontros aos Sábados, das 16h às 17h &bull; Sala 1 (3º Andar)</p>
+            </div>
+
             <div class="announcements-grid">
+                <!-- AVISO 1 -->
                 <article class="card-aviso">
-                    <div class="card-date">18 de Setembro, 2026</div>
-                    <h4 class="lang-text" data-pt="Missa de Inscrição da Catequese" data-en="Catechism Enrollment Mass" data-es="Misa de Inscripción a la Catequesis">Missa de Inscrição da Catequese</h4>
-                    <p class="lang-text" data-pt="Neste domingo, na Missa das 10h, teremos o envio e bênção dos novos catequisandos e seus catequistas." data-en="This Sunday at 10 AM Mass, blessing and sending of new catechism students and teachers." data-es="Este domingo en la Misa de las 10 hs, bendición de los nuevos alumnos de catequesis.">Neste domingo, na Missa das 10h, teremos o envio e bênção dos novos catequisandos e seus catequistas.</p>
+                    <div class="card-date"><i class="fa-regular fa-calendar"></i> 29 de Agosto &bull; 17h30</div>
+                    <h4 class="lang-text" data-pt="Abertura Paroquial" data-en="Parish Opening" data-es="Apertura Parroquial">Abertura Paroquial</h4>
+                    <p class="lang-text" data-pt="Abertura Paroquial em preparação ao Mês da Bíblia." data-en="Parish Opening gathering in preparation for Bible Month." data-es="Apertura Parroquial en preparación al Mes de la Biblia.">Abertura Paroquial em preparação ao Mês da Bíblia.</p>
                 </article>
 
+                <!-- AVISO 2 -->
                 <article class="card-aviso">
-                    <div class="card-date">25 de Setembro, 2026</div>
-                    <h4 class="lang-text" data-pt="Encontro de Casais com Cristo (ECC)" data-en="Couples Encounter with Christ" data-es="Encuentro de Matrimonios con Cristo">Encontro de Casais com Cristo (ECC)</h4>
-                    <p class="lang-text" data-pt="Estão abertas as inscrições na secretaria paroquial para o próximo encontro de casais da comunidade." data-en="Registrations are open at the parish office for the upcoming couples retreat." data-es="Inscripciones abiertas en la secretaría para el próximo encuentro de matrimonios.">Estão abertas as inscrições na secretaria paroquial para o próximo encontro de casais da comunidade.</p>
+                    <div class="card-date"><i class="fa-regular fa-calendar"></i> 05 de Setembro &bull; 16h às 17h</div>
+                    <h4 class="lang-text" data-pt="A Palavra de Deus" data-en="The Word of God" data-es="La Palabra de Dios">A Palavra de Deus</h4>
+                    <p class="lang-text" data-pt="Tradição Oral e escrita na Bíblia e nos escritos patrísticos." data-en="Oral and written Tradition in the Bible and patristic writings." data-es="Tradición Oral y escrita en la Biblia y escritos patrísticos.">Tradição Oral e escrita na Bíblia e nos escritos patrísticos.</p>
+                    <div class="speaker-tag"><i class="fa-solid fa-user-tie"></i> <span class="lang-text" data-pt="Palestrante: Padre Eduardo Douglas" data-en="Speaker: Fr. Eduardo Douglas" data-es="Disertante: P. Eduardo Douglas">Palestrante: Padre Eduardo Douglas</span></div>
                 </article>
 
+                <!-- AVISO 3 -->
                 <article class="card-aviso">
-                    <div class="card-date">Todas as Quintas-Feiras</div>
-                    <h4 class="lang-text" data-pt="Adoração ao Santíssimo Sacramento" data-en="Eucharistic Adoration" data-es="Adoración al Santísimo Sacramento">Adoração ao Santíssimo Sacramento</h4>
-                    <p class="lang-text" data-pt="Exposição do Santíssimo a partir das 15h, encerrando com a bênção solene antes da Missa das 18h." data-en="Exposition of the Blessed Sacrament starting at 3 PM, ending with Solemn Benediction before 6 PM Mass." data-es="Exposición del Santísimo desde las 15 hs, finalizando con la bendición solemne a las 18 hs.">Exposição do Santíssimo a partir das 15h, encerrando com a bênção solene antes da Missa das 18h.</p>
+                    <div class="card-date"><i class="fa-regular fa-calendar"></i> 12 de Setembro &bull; 16h às 17h</div>
+                    <h4 class="lang-text" data-pt="O Magistério da Igreja" data-en="The Church's Magisterium" data-es="El Magisterio de la Iglesia">O Magistério da Igreja</h4>
+                    <p class="lang-text" data-pt="Ministério petrino, na Bíblia e nos escritos patrísticos." data-en="Petrine ministry in the Bible and patristic writings." data-es="Ministerio petrino en la Biblia y escritos patrísticos.">Ministério petrino, na Bíblia e nos escritos patrísticos.</p>
+                    <div class="speaker-tag"><i class="fa-solid fa-user-tie"></i> <span class="lang-text" data-pt="Palestrante: Padre Eduardo Douglas" data-en="Speaker: Fr. Eduardo Douglas" data-es="Disertante: P. Eduardo Douglas">Palestrante: Padre Eduardo Douglas</span></div>
+                </article>
+
+                <!-- AVISO 4 -->
+                <article class="card-aviso">
+                    <div class="card-date"><i class="fa-regular fa-calendar"></i> 19 de Setembro &bull; 16h às 17h</div>
+                    <h4 class="lang-text" data-pt="A Eucaristia" data-en="The Eucharist" data-es="La Eucaristía">A Eucaristia</h4>
+                    <p class="lang-text" data-pt="Corpo, alma e divindade de Cristo, na Bíblia e nos escritos patrísticos." data-en="Body, soul, and divinity of Christ in the Bible and patristic writings." data-es="Cuerpo, alma y divinidad de Cristo en la Biblia y escritos patrísticos.">Corpo, alma e divindade de Cristo, na Bíblia e nos escritos patrísticos.</p>
+                    <div class="speaker-tag"><i class="fa-solid fa-user-tie"></i> <span class="lang-text" data-pt="Palestrante: Padre Eduardo Douglas" data-en="Speaker: Fr. Eduardo Douglas" data-es="Disertante: P. Eduardo Douglas">Palestrante: Padre Eduardo Douglas</span></div>
+                </article>
+
+                <!-- AVISO 5 -->
+                <article class="card-aviso">
+                    <div class="card-date"><i class="fa-regular fa-calendar"></i> 26 de Setembro &bull; 16h às 17h</div>
+                    <h4 class="lang-text" data-pt="Latria, Dulia e Idolatria" data-en="Latria, Dulia and Idolatry" data-es="Latria, Dulia e Idolatría">Latria, Dulia e Idolatria</h4>
+                    <p class="lang-text" data-pt="Adoração a Deus Uno e Trino e veneração aos Anjos e Santos através das imagens e relíquias, como Igreja Corpo Místico de Cristo." data-en="Worship of the Triune God and veneration of Angels and Saints through images and relics as the Mystical Body of Christ." data-es="Adoración a Dios Uno y Trino y veneración a los Ángeles y Santos a través de imágenes y reliquias como Cuerpo Místico de Cristo.">Adoração a Deus Uno e Trino e veneração aos Anjos e Santos através das imagens e relíquias, como Igreja que é Corpo Místico de Cristo.</p>
+                    <div class="speaker-tag"><i class="fa-solid fa-user-tie"></i> <span class="lang-text" data-pt="Palestrante: Padre Eduardo Douglas" data-en="Speaker: Fr. Eduardo Douglas" data-es="Disertante: P. Eduardo Douglas">Palestrante: Padre Eduardo Douglas</span></div>
                 </article>
             </div>
         </section>
@@ -1120,10 +1187,10 @@
                 </div>
 
                 <h4 class="lang-text" data-pt="História e Fundação (08 de Setembro de 1932)" data-en="History & Foundation (Sept 8, 1932)" data-es="Historia y Fundación (08 de Septiembre de 1932)">História e Fundação (08 de Setembro de 1932)</h4>
-                <p>A <strong>Casa do Pobre de Nossa Senhora de Copacabana</strong> foi fundada em 8 de setembro de 1932 — data festiva da Natividade da Virgem Maria —, por uma comissão de cidadãos dedicados com aprovação do Cardeal Dom Sebastião Leme, visando socorrer os necessitados e criar a Escola e Creche Paroquial.</p>
+                <p>A <strong>Casa do Pobre de Nossa Senhora de Copacabana</strong> foi fundada em 8 de setembro de 1932 — data festiva da Natividade da Virgem Maria —, por uma comissão de cidadãos dedicados com aprovação do Cardeal Dom Sebastião Leme, visando socorrer os necessitados e criar a Escola e Creche Paroquial[span_0](start_span)[span_0](end_span).</p>
 
                 <h4 class="lang-text" data-pt="Atuação Atual e Bolsas de Estudo" data-en="Current Work & Scholarships" data-es="Trabajo Actual y Becas">Atuação Atual e Bolsas de Estudo</h4>
-                <p>Na gestão atual do <strong>Monsenhor Aroldo</strong>, já foram concedidas cerca de 800 bolsas de estudo gratuitas. Em 2024, foram destinadas 50 bolsas para Pré-Escola I e 79 bolsas para Maternal I e II, acolhendo com dignidade as crianças vulneráveis.</p>
+                <p>Na gestão atual do <strong>Monsenhor Aroldo</strong>, já foram concedidas cerca de 800 bolsas de estudo gratuitas[span_1](start_span)[span_1](end_span). Em 2024, foram destinadas 50 bolsas para Pré-Escola I e 79 bolsas para Maternal I e II, acolhendo com dignidade as crianças vulneráveis[span_2](start_span)[span_2](end_span).</p>
 
                 <h4 class="lang-text" data-pt="Galeria de Fotos" data-en="Photo Gallery" data-es="Galería de Fotos">Galeria de Fotos</h4>
                 <div class="gallery-grid-5">
@@ -1131,7 +1198,7 @@
                     <div class="gallery-thumb" onclick="setSlide('carousel-campo', 1)"><img src="campo2.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 2"></div>
                     <div class="gallery-thumb" onclick="setSlide('carousel-campo', 2)"><img src="campo3.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 3"></div>
                     <div class="gallery-thumb" onclick="setSlide('carousel-campo', 3)"><img src="campo4.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 4"></div>
-                    <div class="gallery-thumb" onclick="setSlide('carousel-campo', 5)"><img src="campo5.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 5"></div>
+                    <div class="gallery-thumb" onclick="setSlide('carousel-campo', 4)"><img src="campo5.jpg" onerror="this.src='santa_rosa.jpg'" alt="Thumb 5"></div>
                 </div>
 
                 <div style="margin-top: 40px; text-align: center; background: var(--bg-cream); padding: 30px; border: 1px solid #e0d8cb;">
