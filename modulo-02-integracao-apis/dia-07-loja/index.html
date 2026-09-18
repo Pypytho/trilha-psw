@@ -887,12 +887,77 @@
             }
         }
 
-        // PROCESSAR PEDIDO & SIMULAR GATEWAY
-        function processarPedido() {
-            if (cart.length === 0) {
-                alert('Adicione pelo menos um produto ao carrinho.');
-                return;
-            }
+        // PROCESSAR PEDIDO CONECTADO AO SERVIDOR BACKEND DO REPLIT
+async function processarPedido() {
+    if (cart.length === 0) {
+        alert('Adicione pelo menos um produto ao carrinho.');
+        return;
+    }
+
+    // COLE AQUI A URL GERADA PELO SEU REPLIT:
+    const REPLIT_URL = https://SUA-URL-DO-REPLIT/api/checkout;
+
+    // 1. Prepara o pacote de dados (Payload JSON) para enviar ao Servidor
+    const payload = {
+        cartItems: cart,
+        shipping: { name: currentShippingName, price: currentShipping },
+        payment: {
+            method: currentPayment,
+            cardNumber: document.getElementById('card-number-input')?.value || ""
+        }
+    };
+
+    try {
+        // Exibe aviso visual de processamento
+        console.log("Enviando dados para o servidor no Replit...");
+
+        // 2. Faz a chamada HTTP POST para o Backend no Replit
+        const response = await fetch(REPLIT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        // 3. Trata a resposta do Servidor
+        if (data.success) {
+            // Preenche os dados da Nota Fiscal (DANFE) retornados pelo Replit
+            document.getElementById('nfe-num').innerText = data.order.fiscalNote.nfeNumber;
+            document.getElementById('nfe-key').innerText = data.order.fiscalNote.accessKey;
+            document.getElementById('danfe-endereco').innerText = userAddress ? `ENDEREÇO: ${userAddress}` : 'ENDEREÇO: Cadastrado no Servidor';
+
+            const danfeItems = document.getElementById('danfe-items');
+            danfeItems.innerHTML = cart.map(item => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.qty}</td>
+                    <td>R$ ${item.price.toFixed(2)}</td>
+                    <td>R$ ${(item.price * item.qty).toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('danfe-base-icms').innerText = `R$ ${data.order.fiscalNote.icmsBase}`;
+            document.getElementById('danfe-val-icms').innerText = `R$ ${data.order.fiscalNote.icmsValue}`;
+            document.getElementById('danfe-total').innerText = `R$ ${data.order.totalAmount.toFixed(2)}`;
+
+            // Exibe modal de aprovação
+            document.getElementById('modal-success').classList.add('active');
+
+            // Esvazia carrinho
+            cart = [];
+            updateCartUI();
+        } else {
+            // Se o servidor no Replit recusou a transação
+            document.getElementById('declined-reason-text').innerText = data.error || "Transação recusada pelo servidor.";
+            document.getElementById('modal-declined').classList.add('active');
+        }
+    } catch (error) {
+        alert("Erro ao conectar com o Servidor no Replit. Verifique se ele está rodando (botão Run).");
+        console.error("Erro na requisição:", error);
+    }
+}
+
 
             const simStatus = document.getElementById('gateway-status-sim').value;
             const total = parseFloat(document.getElementById('total-val').innerText.replace('R$ ', '').replace('.', '').replace(',', '.'));
