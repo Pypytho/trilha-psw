@@ -599,55 +599,55 @@
         // CONEXÃO DE VERDADE COM O SERVIDOR BACKEND DO REPLIT
         // =======================================================
         async function processarPedido() {
-            if (cart.length === 0) return alert('Adicione produtos ao carrinho!');
+    if (cart.length === 0) return alert('Adicione produtos ao carrinho!');
 
-            // ⚠️ ALTERE APENAS ESTA LINHA COM O LINK DO SEU REPLIT:
-            const REPLIT_URL = "https://05c5005b-8665-48ca-bd11-1657bd32421c-00-36ceefrnop9g4.picard.replit.dev/api/checkout";
+    // URL Exata da API no Replit
+    const REPLIT_URL = "https://05c5005b-8665-48ca-bd11-1657bd32421c-00-36ceefrnop9g4.picard.replit.dev/api/checkout";
 
-            const payload = {
-                cartItems: cart,
-                shipping: { name: "PAC", price: currentShipping },
-                payment: {
-                    method: currentPayment,
-                    cardNumber: document.getElementById('card-input')?.value || ""
-                }
-            };
-
-            document.getElementById('loading-msg').style.display = 'block';
-
-            try {
-                const response = await fetch(REPLIT_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await response.json();
-                document.getElementById('loading-msg').style.display = 'none';
-
-                if (data.success) {
-                    document.getElementById('nfe-num').innerText = data.order.fiscalNote.nfeNumber;
-                    document.getElementById('nfe-key').innerText = data.order.fiscalNote.accessKey;
-                    document.getElementById('danfe-endereco').innerText = userAddress ? `ENDEREÇO: ${userAddress}` : 'ENDEREÇO: Cadastrado no Servidor';
-                    document.getElementById('danfe-val-icms').innerText = `R$ ${data.order.fiscalNote.icmsValue}`;
-                    document.getElementById('danfe-total').innerText = `R$ ${data.order.totalAmount.toFixed(2)}`;
-
-                    document.getElementById('danfe-items').innerHTML = cart.map(i => `
-                        <tr><td>${i.name}</td><td>${i.qty}</td><td>R$ ${(i.price * i.qty).toFixed(2)}</td></tr>
-                    `).join('');
-
-                    document.getElementById('modal-success').classList.add('active');
-                    cart = [];
-                    updateCartUI();
-                } else {
-                    document.getElementById('declined-reason-text').innerText = data.error || "Recusado pelo servidor.";
-                    document.getElementById('modal-declined').classList.add('active');
-                }
-            } catch (err) {
-                document.getElementById('loading-msg').style.display = 'none';
-                alert("Erro de conexão! Verifique se a URL do Replit está correta e se o botão RUN está ativo no Replit.");
-            }
+    const payload = {
+        cartItems: cart,
+        shipping: { name: "PAC", price: currentShipping },
+        payment: {
+            method: currentPayment,
+            cardNumber: document.getElementById('card-input')?.value || ""
         }
+    };
+
+    document.getElementById('loading-msg').style.display = 'block';
+
+    try {
+        const response = await fetch(REPLIT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        document.getElementById('loading-msg').style.display = 'none';
+
+        if (data.success) {
+            document.getElementById('nfe-num').innerText = data.order.fiscalNote.nfeNumber;
+            document.getElementById('nfe-key').innerText = data.order.fiscalNote.accessKey;
+            document.getElementById('danfe-endereco').innerText = userAddress ? `ENDEREÇO: ${userAddress}` : 'ENDEREÇO: Cadastrado no Servidor';
+            document.getElementById('danfe-val-icms').innerText = `R$ ${data.order.fiscalNote.icmsValue}`;
+            document.getElementById('danfe-total').innerText = `R$ ${data.order.totalAmount.toFixed(2)}`;
+
+            document.getElementById('danfe-items').innerHTML = cart.map(i => `
+                <tr><td>${i.name}</td><td>${i.qty}</td><td>R$ ${(i.price * i.qty).toFixed(2)}</td></tr>
+            `).join('');
+
+            document.getElementById('modal-success').classList.add('active');
+            cart = [];
+            updateCartUI();
+        } else {
+            document.getElementById('declined-reason-text').innerText = data.error || "Recusado pelo servidor.";
+            document.getElementById('modal-declined').classList.add('active');
+        }
+    } catch (err) {
+        document.getElementById('loading-msg').style.display = 'none';
+        alert("Erro de conexão! Verifique se a URL do Replit está correta e se o botão RUN está ativo no Replit.");
+    }
+}
 
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
         function scrollToCheckout() { document.getElementById('checkout-section').scrollIntoView({ behavior: 'smooth' }); }
