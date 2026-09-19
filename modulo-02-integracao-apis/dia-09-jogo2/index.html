@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arrow Dodge 360 | Desvio de Projetéis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: #151d2a;
+            --primary-blue: #38bdf8;
+            --accent-red: #f43f5e;
+            --accent-gold: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            touch-action: none; /* Evita rolagem da página no celular durante o jogo */
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--primary-blue);
+            letter-spacing: 1px;
+        }
+
+        .controls-bar {
+            background: var(--card-bg);
+            padding: 10px 20px;
+            border-radius: 12px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        label { font-size: 0.85rem; color: var(--text-muted); }
+
+        select, button {
+            background: #222f43;
+            color: #fff;
+            border: 1px solid #334155;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+            font-weight: 600;
+        }
+
+        button:hover { background: var(--primary-blue); color: var(--bg-dark); }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+        }
+
+        canvas {
+            background-color: #0b1120;
+            border: 2px solid #1e293b;
+            border-radius: 16px;
+            width: 100%;
+            height: 100%;
+            display: block;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* OVERLAY DE MENUS DENTRO DO CANVAS */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(9, 13, 22, 0.85);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .overlay h2 { font-size: 1.8rem; margin-bottom: 10px; color: var(--primary-blue); }
+        .overlay p { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px; }
+
+        .btn-start {
+            background: var(--primary-blue);
+            color: var(--bg-dark);
+            border: none;
+            padding: 12px 28px;
+            font-size: 1rem;
+            border-radius: 30px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .btn-start:hover { transform: scale(1.05); background: #7dd3fc; }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 15px;
+            background: var(--card-bg);
+            padding: 12px 20px;
+            border-radius: 12px;
+        }
+
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+        .stat-val { font-size: 1.2rem; font-weight: 700; color: #fff; }
+
+        .instructions {
+            margin-top: 12px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>ARROW DODGE 360</h1>
+    </header>
+
+    <div class="controls-bar">
+        <label for="difficulty-select">Dificuldade:</label>
+        <select id="difficulty-select" onchange="changeDifficulty()">
+            <option value="easy">Fácil</option>
+            <option value="medium" selected>Médio</option>
+            <option value="hard">Insano</option>
+        </select>
+    </div>
+
+    <div class="game-container">
+        <canvas id="gameCanvas" width="500" height="500"></canvas>
+
+        <!-- MENU INICIAL -->
+        <div class="overlay" id="menu-overlay">
+            <h2>SOBREVIVA ÀS SETAS</h2>
+            <p>Desvie dos projéteis vindos em todas as direções!</p>
+            <button class="btn-start" onclick="startGame()">Jogar Agora</button>
+        </div>
+
+        <!-- TELA DE GAME OVER -->
+        <div class="overlay" id="gameover-overlay" style="display: none;">
+            <h2 style="color: var(--accent-red);">VOCÊ FOI ATINGIDO!</h2>
+            <p id="gameover-stats">Tempo de Sobrevivência: 0.0s</p>
+            <button class="btn-start" onclick="startGame()">Tentar Novamente</button>
+        </div>
+    </div>
+
+    <div class="stats-panel">
+        <div class="stat-box">
+            <div class="stat-label">Tempo Atual</div>
+            <div class="stat-val" id="time-val" style="color: var(--primary-blue);">0.0s</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Recorde</div>
+            <div class="stat-val" id="highscore-val" style="color: var(--accent-gold);">0.0s</div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <strong>Controles:</strong> Use <u>WASD / Setas</u> no PC ou <u>Arraste o dedo</u> na tela no Celular.
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ELEMENTOS DA UI
+        const menuOverlay = document.getElementById('menu-overlay');
+        const gameoverOverlay = document.getElementById('gameover-overlay');
+        const timeVal = document.getElementById('time-val');
+        const highscoreVal = document.getElementById('highscore-val');
+        const gameoverStats = document.getElementById('gameover-stats');
+
+        // CONFIGURAÇÕES DO JOGO
+        let isGaming = false;
+        let animationFrameId = null;
+        let startTime = 0;
+        let currentTime = 0;
+        let highscore = localStorage.getItem('arrow_dodge_highscore') || 0;
+
+        highscoreVal.innerText = `${parseFloat(highscore).toFixed(1)}s`;
+
+        // DIFICULDADES CONFIGURADAS
+        const DIFFICULTIES = {
+            easy:   { spawnInterval: 450, baseSpeed: 2.5, speedMultiplier: 0.05 },
+            medium: { spawnInterval: 300, baseSpeed: 3.8, speedMultiplier: 0.08 },
+            hard:   { spawnInterval: 180, baseSpeed: 5.2, speedMultiplier: 0.12 }
+        };
+
+        let currentDiffConfig = DIFFICULTIES.medium;
+        let lastSpawnTime = 0;
+
+        // ENTIDADE: JOGADOR (BONECO)
+        const player = {
+            x: 250,
+            y: 250,
+            radius: 12,
+            speed: 5,
+            color: '#38bdf8'
+        };
+
+        // TECLAS PRESSIONADAS
+        const keys = {};
+
+        // COLEÇÃO DE PROJÉTEIS E PARTÍCULAS
+        let projectiles = [];
+        let particles = [];
+
+        // CONTROLES POR TECLADO
+        window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+        // CONTROLES POR TOUCH (CELULAR)
+        let isTouching = false;
+        canvas.addEventListener('touchstart', (e) => handleTouch(e));
+        canvas.addEventListener('touchmove', (e) => handleTouch(e));
+        canvas.addEventListener('touchend', () => isTouching = false);
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const touchX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+            const touchY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+            
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, touchX));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, touchY));
+        }
+
+        function changeDifficulty() {
+            const val = document.getElementById('difficulty-select').value;
+            currentDiffConfig = DIFFICULTIES[val];
+        }
+
+        function startGame() {
+            menuOverlay.style.display = 'none';
+            gameoverOverlay.style.display = 'none';
+            
+            // Reset de entidades
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            projectiles = [];
+            particles = [];
+            
+            startTime = performance.now();
+            lastSpawnTime = performance.now();
+            isGaming = true;
+
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        // DISPARAR PROJÉTEIS DAS BORDAS (360 GRAUS)
+        function spawnProjectile() {
+            // Escolhe uma borda aleatória: 0=Top, 1=Right, 2=Bottom, 3=Left
+            const edge = Math.floor(Math.random() * 4);
+            let x, y;
+
+            if (edge === 0) { x = Math.random() * canvas.width; y = -15; }
+            else if (edge === 1) { x = canvas.width + 15; y = Math.random() * canvas.height; }
+            else if (edge === 2) { x = Math.random() * canvas.width; y = canvas.height + 15; }
+            else { x = -15; y = Math.random() * canvas.height; }
+
+            // Ângulo direcionado para a posição ATUAL do jogador (com pequena variação aleatória)
+            const angle = Math.atan2(player.y - y, player.x - x) + (Math.random() - 0.5) * 0.2;
+            
+            // Velocidade escala conforme o tempo passa
+            const elapsed = (performance.now() - startTime) / 1000;
+            const currentSpeed = currentDiffConfig.baseSpeed + (elapsed * currentDiffConfig.speedMultiplier);
+
+            projectiles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * currentSpeed,
+                vy: Math.sin(angle) * currentSpeed,
+                angle: angle,
+                size: 14
+            });
+        }
+
+        function updatePlayerPosition() {
+            if (keys['arrowup'] || keys['w']) player.y -= player.speed;
+            if (keys['arrowdown'] || keys['s']) player.y += player.speed;
+            if (keys['arrowleft'] || keys['a']) player.x -= player.speed;
+            if (keys['arrowright'] || keys['d']) player.x += player.speed;
+
+            // Limites da tela
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+        }
+
+        function triggerExplosion(x, y) {
+            for (let i = 0; i < 30; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 6 + 2;
+                particles.push({
+                    x: x, y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.0,
+                    color: Math.random() > 0.5 ? '#f43f5e' : '#38bdf8'
+                });
+            }
+        }
+
+        function gameOver() {
+            isGaming = false;
+            triggerExplosion(player.x, player.y);
+
+            const finalTime = ((performance.now() - startTime) / 1000).toFixed(1);
+            if (parseFloat(finalTime) > parseFloat(highscore)) {
+                highscore = finalTime;
+                localStorage.setItem('arrow_dodge_highscore', highscore);
+                highscoreVal.innerText = `${highscore}s`;
+            }
+
+            gameoverStats.innerText = `Você sobreviveu por ${finalTime} segundos!`;
+            setTimeout(() => {
+                gameoverOverlay.style.display = 'flex';
+            }, 600);
+        }
+
+        // LOOP PRINCIPAL DO JOGO (60 FPS)
+        function gameLoop() {
+            const now = performance.now();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (isGaming) {
+                currentTime = ((now - startTime) / 1000).toFixed(1);
+                timeVal.innerText = `${currentTime}s`;
+
+                updatePlayerPosition();
+
+                // Gerar novos projéteis dinamicamente
+                if (now - lastSpawnTime > currentDiffConfig.spawnInterval) {
+                    spawnProjectile();
+                    lastSpawnTime = now;
+                }
+            }
+
+            // ATUALIZAR E DESENHAR PROJÉTEIS (SETAS)
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const p = projectiles[i];
+                if (isGaming) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                }
+
+                // Desenhar a Seta
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                
+                ctx.fillStyle = '#f43f5e';
+                ctx.beginPath();
+                ctx.moveTo(p.size, 0);
+                ctx.lineTo(-p.size, -p.size / 1.8);
+                ctx.lineTo(-p.size / 2, 0);
+                ctx.lineTo(-p.size, p.size / 1.8);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+
+                // CHECAGEM DE COLISÃO (Círculo de Colisão do Jogador vs Ponta da Seta)
+                if (isGaming) {
+                    const dist = Math.hypot(player.x - p.x, player.y - p.y);
+                    if (dist < player.radius + 4) {
+                        gameOver();
+                    }
+                }
+
+                // Remover projéteis fora da tela
+                if (p.x < -30 || p.x > canvas.width + 30 || p.y < -30 || p.y > canvas.height + 30) {
+                    projectiles.splice(i, 1);
+                }
+            }
+
+            // DESENHAR PARTÍCULAS DE EXPLOSÃO
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const pt = particles[i];
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                pt.life -= 0.03;
+
+                ctx.fillStyle = pt.color;
+                ctx.globalAlpha = Math.max(0, pt.life);
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+
+                if (pt.life <= 0) particles.splice(i, 1);
+            }
+
+            // DESENHAR JOGADOR (BONECO)
+            if (isGaming) {
+                ctx.fillStyle = player.color;
+                ctx.shadowColor = player.color;
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
