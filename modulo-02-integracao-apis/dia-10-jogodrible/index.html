@@ -2,16 +2,16 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Dribbler 1P | Simulador de Drible 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drible 360 | Controle de Bola Livre</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #060911;
+            --bg-dark: #080d1a;
             --card-bg: #111827;
-            --field-green: #15803d;
+            --pitch-green: #15803d;
             --accent-gold: #fbbf24;
             --accent-red: #ef4444;
             --accent-blue: #38bdf8;
@@ -30,64 +30,80 @@
             flex-direction: column;
             align-items: center;
             padding: 10px;
-            touch-action: manipulation;
+            touch-action: none; /* Impede rolagem na tela ao arrastar a bola */
             user-select: none;
+            overflow: hidden;
         }
 
         header {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         header h1 {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 900;
             color: var(--accent-gold);
-            letter-spacing: 2px;
-            text-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+            letter-spacing: 1px;
         }
+
+        .hud-bar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 450px;
+            margin-bottom: 8px;
+            background: var(--card-bg);
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
+        }
+
+        .hud-item { text-align: center; }
+        .hud-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+        .hud-val { font-size: 1.1rem; font-weight: 900; color: #fff; }
 
         .game-wrapper {
             position: relative;
             width: 100%;
-            max-width: 480px;
-            aspect-ratio: 4 / 5;
+            max-width: 450px;
+            aspect-ratio: 1 / 1;
         }
 
         canvas {
             width: 100%;
             height: 100%;
-            background-color: #000;
+            background-color: var(--pitch-green);
             border-radius: 16px;
             display: block;
-            border: 2px solid #1f2937;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 3px solid #1e293b;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
 
-        /* OVERLAYS DE INTERFACE */
+        /* OVERLAYS DE MENU */
         .overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(6, 9, 17, 0.88);
+            background: rgba(8, 13, 26, 0.9);
             border-radius: 16px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 25px;
-            backdrop-filter: blur(6px);
+            padding: 20px;
+            backdrop-filter: blur(5px);
         }
 
         .overlay h2 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 900;
             color: var(--accent-gold);
             margin-bottom: 8px;
         }
 
         .overlay p {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
             margin-bottom: 20px;
             line-height: 1.4;
@@ -97,71 +113,27 @@
             background: linear-gradient(135deg, var(--accent-gold), #d97706);
             color: #000;
             border: none;
-            padding: 14px 32px;
-            font-size: 1rem;
+            padding: 12px 28px;
+            font-size: 0.95rem;
             border-radius: 30px;
             font-weight: 900;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
-            transition: transform 0.15s;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
         }
 
-        .btn-main:active { transform: scale(0.95); }
-
-        /* CONTROLES DE DIREÇÃO (MOBILE / TELA) */
-        .controls-container {
-            display: flex;
-            gap: 15px;
-            width: 100%;
-            max-width: 480px;
-            margin-top: 12px;
+        .instructions {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
         }
-
-        .btn-dribble {
-            flex: 1;
-            background: var(--card-bg);
-            border: 2px solid #374151;
-            color: var(--text-main);
-            padding: 16px 0;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: background 0.1s, border-color 0.1s;
-        }
-
-        .btn-dribble:active {
-            background: #1f2937;
-            border-color: var(--accent-gold);
-            color: var(--accent-gold);
-        }
-
-        .hud-bar {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 480px;
-            margin-bottom: 8px;
-            background: var(--card-bg);
-            padding: 10px 16px;
-            border-radius: 10px;
-        }
-
-        .hud-item { text-align: center; }
-        .hud-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
-        .hud-val { font-size: 1.2rem; font-weight: 900; color: #fff; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>PRO DRIBLER 1P</h1>
+        <h1>DRIBLE 360°</h1>
     </header>
 
     <div class="hud-bar">
@@ -170,8 +142,8 @@
             <div class="hud-val" id="hud-dribbles" style="color: var(--accent-gold);">0</div>
         </div>
         <div class="hud-item">
-            <div class="hud-label">Velocidade</div>
-            <div class="hud-val" id="hud-speed">24 km/h</div>
+            <div class="hud-label">Tempo</div>
+            <div class="hud-val" id="hud-time">0.0s</div>
         </div>
         <div class="hud-item">
             <div class="hud-label">Recorde</div>
@@ -180,34 +152,32 @@
     </div>
 
     <div class="game-wrapper">
-        <canvas id="canvas" width="400" height="500"></canvas>
+        <canvas id="canvas" width="450" height="450"></canvas>
 
-        <!-- MENU PRINCIPAL -->
+        <!-- MENU INICIAL -->
         <div class="overlay" id="menu-overlay">
-            <h2>X1 NO CAMPO</h2>
-            <p>Enxergue o jogo em 1ª Pessoa! Quando o zagueiro der o bote, toque a bola na hora certa para desviar!</p>
-            <button class="btn-main" onclick="startGame()">ENTRAR EM CAMPO</button>
+            <h2>DOMINE A BOLA</h2>
+            <p>Arraste a bola com o dedo. Os zagueiros virão de todas as direções para dar o bote. Mude de direção no momento certo!</p>
+            <button class="btn-main" onclick="startGame()">INICIAR JOGO</button>
         </div>
 
-        <!-- TELA DE FIM DE JOGO -->
+        <!-- GAMEOVER -->
         <div class="overlay" id="gameover-overlay" style="display: none;">
-            <h2 style="color: var(--accent-red);" id="gameover-title">DESARMADO!</h2>
-            <p id="gameover-desc">O zagueiro roubou sua bola no bote.</p>
-            <button class="btn-main" onclick="startGame()">TENTAR DE NOVO</button>
+            <h2 style="color: var(--accent-red);" id="gameover-title">BOLA ROUBADA!</h2>
+            <p id="gameover-desc">O zagueiro acertou o bote na bola.</p>
+            <button class="btn-main" onclick="startGame()">TENTAR NOVAMENTE</button>
         </div>
     </div>
 
-    <!-- BOTÕES NA TELA -->
-    <div class="controls-container">
-        <button class="btn-dribble" onclick="dribble('left')">⬅️ CORTAR ESQ</button>
-        <button class="btn-dribble" onclick="dribble('right')">CORTAR DIR ➡️</button>
+    <div class="instructions">
+        💡 <strong>Dica:</strong> Toque e segure na bola para conduzi-la pelo gramado.
     </div>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
-        // SENSORIAIS / SOM PROCEDURAL (Sem arquivos externos)
+        // AUDIO SINTETIZADO PROCEDURAL
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
 
@@ -218,98 +188,120 @@
             osc.connect(gain);
             gain.connect(audioCtx.destination);
 
-            if (type === 'kick') {
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.12);
-                gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.12);
-            } else if (type === 'dribble') {
-                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            if (type === 'dodge') {
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'tackle_miss') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(40, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
             } else if (type === 'whistle') {
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(1800, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+                osc.frequency.setValueAtTime(1600, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
             }
         }
 
-        // VARIÁVEIS DE JOGO
-        let gameState = 'MENU'; // 'MENU', 'PLAYING', 'GAMEOVER'
+        // ESTADOS DO JOGO
+        let gameState = 'MENU';
         let dribbleCount = 0;
-        let highscore = localStorage.getItem('dribble_1p_highscore') || 0;
-        let gameSpeed = 8;
-        let fieldOffset = 0;
+        let startTime = 0;
         let animId = null;
+        let highscore = localStorage.getItem('dribble_360_record') || 0;
 
-        // POSIÇÃO DO JOGADOR (BOLA / PÉS)
-        // Lanes: -1 (Esquerda), 0 (Centro), 1 (Direita)
-        let playerLane = 0;
-        let targetLane = 0;
-        let ballX = 200;
-        let ballAnimX = 200;
-
-        // ESTATÍSTICAS
         document.getElementById('hud-record').innerText = highscore;
 
-        // DEFENSOR (MARCADOR)
-        let defender = null;
+        // BOLA (JOGADOR)
+        const ball = {
+            x: 225,
+            y: 225,
+            targetX: 225,
+            targetY: 225,
+            radius: 14,
+            rotation: 0
+        };
 
-        function spawnDefender() {
-            // Decide a posição e o tipo de bote
-            const lanes = [-1, 0, 1];
-            const startLane = lanes[Math.floor(Math.random() * lanes.length)];
-            // Lunge Direction: -1 (Dá o bote para a esquerda), 1 (Dá o bote para a direita), 0 (Bote reto)
-            const lungeDir = Math.random() > 0.5 ? 1 : -1;
+        // CONTROLE TOQUE / MOUSE
+        let isPointerDown = false;
 
-            defender = {
-                z: 800,               // Distância em profundidade
-                lane: startLane,       // Posição na pista
-                lungeDir: lungeDir,    // Direção para onde ele vai esticar a perna
-                isLunging: false,      // Se ativou o bote
-                lunged: false,         // Se o bote já foi executado
-                color: '#ef4444'       // Vermelho
-            };
+        function updatePointerPos(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (clientX - rect.left) * (canvas.width / rect.width);
+            const y = (clientY - rect.top) * (canvas.height / rect.height);
+
+            // Mantém a bola dentro do gramado
+            ball.targetX = Math.max(ball.radius, Math.min(canvas.width - ball.radius, x));
+            ball.targetY = Math.max(ball.radius, Math.min(canvas.height - ball.radius, y));
         }
 
-        // CONTROLES DE TECLADO
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'a') dribble('left');
-            if (e.key === 'ArrowRight' || e.key === 'd') dribble('right');
+        canvas.addEventListener('pointerdown', (e) => {
+            isPointerDown = true;
+            updatePointerPos(e.clientX, e.clientY);
         });
 
-        function dribble(dir) {
-            if (gameState !== 'PLAYING') return;
-
-            if (dir === 'left' && targetLane > -1) {
-                targetLane--;
-                playSound('dribble');
-            } else if (dir === 'right' && targetLane < 1) {
-                targetLane++;
-                playSound('dribble');
+        canvas.addEventListener('pointermove', (e) => {
+            if (isPointerDown || gameState === 'PLAYING') {
+                updatePointerPos(e.clientX, e.clientY);
             }
+        });
+
+        canvas.addEventListener('pointerup', () => isPointerDown = false);
+
+        // ZAGUEIROS (DEFENSORES)
+        let defenders = [];
+        let particles = [];
+        let lastSpawn = 0;
+
+        function spawnDefender() {
+            // Define de qual borda o zagueiro vai nascer (0=Top, 1=Right, 2=Bottom, 3=Left)
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+
+            if (side === 0) { x = Math.random() * canvas.width; y = -25; }
+            else if (side === 1) { x = canvas.width + 25; y = Math.random() * canvas.height; }
+            else if (side === 2) { x = Math.random() * canvas.width; y = canvas.height + 25; }
+            else { x = -25; y = Math.random() * canvas.height; }
+
+            defenders.push({
+                x: x,
+                y: y,
+                radius: 16,
+                speed: 1.8 + Math.random() * 0.8 + (dribbleCount * 0.05), // Acelera suavemente com o placar
+                state: 'APPROACH', // 'APPROACH', 'PREPARE_BOTE', 'LUNGING', 'RECOVER'
+                targetBoteX: 0,
+                targetBoteY: 0,
+                timer: 0,
+                lungeVx: 0,
+                lungeVy: 0
+            });
         }
 
         function startGame() {
             document.getElementById('menu-overlay').style.display = 'none';
             document.getElementById('gameover-overlay').style.display = 'none';
 
-            dribbleCount = 0;
-            gameSpeed = 9;
-            playerLane = 0;
-            targetLane = 0;
-            ballX = 200;
-            ballAnimX = 200;
-            
-            document.getElementById('hud-dribbles').innerText = "0";
-            document.getElementById('hud-speed').innerText = `${Math.round(gameSpeed * 3)} km/h`;
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.targetX = ball.x;
+            ball.targetY = ball.y;
 
-            spawnDefender();
+            defenders = [];
+            particles = [];
+            dribbleCount = 0;
+            startTime = performance.now();
+            lastSpawn = performance.now();
+
+            document.getElementById('hud-dribbles').innerText = "0";
+            document.getElementById('hud-time').innerText = "0.0s";
+
             gameState = 'PLAYING';
             playSound('whistle');
 
@@ -317,244 +309,260 @@
             loop();
         }
 
-        function gameOver(reason) {
+        function gameOver() {
             gameState = 'GAMEOVER';
-            playSound('kick');
+            playSound('tackle_miss');
+
+            const finalTime = ((performance.now() - startTime) / 1000).toFixed(1);
 
             if (dribbleCount > highscore) {
                 highscore = dribbleCount;
-                localStorage.setItem('dribble_1p_highscore', highscore);
+                localStorage.setItem('dribble_360_record', highscore);
                 document.getElementById('hud-record').innerText = highscore;
             }
 
-            document.getElementById('gameover-title').innerText = "BOTE CERTO DO ZAGUEIRO!";
-            document.getElementById('gameover-desc').innerText = `Você completou ${dribbleCount} drible(s) perfeitos antes de perder a bola.`;
+            document.getElementById('gameover-desc').innerText = `Você deu ${dribbleCount} drible(s) em ${finalTime}s de jogo.`;
             document.getElementById('gameover-overlay').style.display = 'flex';
         }
 
-        // RENDERIZAÇÃO DO CAMPO EM PERSPECTIVA (PSEUDO 3D)
-        function drawField() {
-            const horizonY = 140;
-            const width = canvas.width;
-            const height = canvas.height;
+        // DESENHAR O GRAMADO
+        function drawPitch() {
+            // Fundo
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Céu / Estádio (Fundo Escuro)
-            const skyGradient = ctx.createLinearGradient(0, 0, 0, horizonY);
-            skyGradient.addColorStop(0, '#020617');
-            skyGradient.addColorStop(1, '#0f172a');
-            ctx.fillStyle = skyGradient;
-            ctx.fillRect(0, 0, width, horizonY);
-
-            // Holofotes de Estádio no Fundo
-            ctx.fillStyle = '#fef08a';
-            ctx.shadowColor = '#fef08a';
-            ctx.shadowBlur = 15;
-            ctx.beginPath();
-            ctx.arc(60, 60, 6, 0, Math.PI * 2);
-            ctx.arc(340, 60, 6, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // Gramado do Campo
-            const fieldGradient = ctx.createLinearGradient(0, horizonY, 0, height);
-            fieldGradient.addColorStop(0, '#166534');
-            fieldGradient.addColorStop(1, '#15803d');
-            ctx.fillStyle = fieldGradient;
-            ctx.fillRect(0, horizonY, width, height - horizonY);
-
-            // Linhas Horizontais do Gramado (Movimento para frente)
-            fieldOffset = (fieldOffset + gameSpeed) % 40;
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 2;
-
-            for (let z = 1; z < 10; z++) {
-                let py = horizonY + Math.pow(z / 10, 2) * (height - horizonY) + (fieldOffset * (z/10));
-                if (py > horizonY && py < height) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, py);
-                    ctx.lineTo(width, py);
-                    ctx.stroke();
+            // Listras do Gramado
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            for (let i = 0; i < canvas.height; i += 50) {
+                if ((i / 50) % 2 === 0) {
+                    ctx.fillRect(0, i, canvas.width, 50);
                 }
             }
 
-            // Linhas de Demarcação Laterais (Perspectiva em V)
-            ctx.strokeStyle = '#ffffff';
+            // Linhas de Demarcação do Campo
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 3;
-            
-            // Linha Esquerda
+
+            // Borda externa
+            ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+
+            // Círculo Central
             ctx.beginPath();
-            ctx.moveTo(120, horizonY);
-            ctx.lineTo(-50, height);
+            ctx.arc(canvas.width / 2, canvas.height / 2, 60, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Linha Direita
+            // Ponto Central
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.beginPath();
-            ctx.moveTo(280, horizonY);
-            ctx.lineTo(450, height);
-            ctx.stroke();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 4, 0, Math.PI * 2);
+            ctx.fill();
         }
 
-        // RENDERIZAR O DEFENSOR EM 2.5D
-        function drawDefender() {
-            if (!defender) return;
+        // LOOP PRINCIPAL DO JOGO
+        function loop() {
+            const now = performance.now();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const horizonY = 140;
-            const fov = 250;
+            drawPitch();
 
-            // Avançar zagueiro na direção do jogador
             if (gameState === 'PLAYING') {
-                defender.z -= gameSpeed * 2.2;
+                const elapsed = ((now - startTime) / 1000).toFixed(1);
+                document.getElementById('hud-time').innerText = `${elapsed}s`;
+
+                // Gerar zagueiros periodicamente
+                if (now - lastSpawn > Math.max(800, 2200 - (dribbleCount * 80))) {
+                    spawnDefender();
+                    lastSpawn = now;
+                }
+
+                // Movimentação suave da bola até a posição do toque
+                const dx = ball.targetX - ball.x;
+                const dy = ball.targetY - ball.y;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist > 2) {
+                    ball.x += dx * 0.25;
+                    ball.y += dy * 0.25;
+                    ball.rotation += dist * 0.05;
+
+                    // Partículas de grama ao mover rápido
+                    if (dist > 8 && Math.random() > 0.6) {
+                        particles.push({
+                            x: ball.x, y: ball.y + 10,
+                            vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
+                            life: 1.0, color: '#bbf7d0'
+                        });
+                    }
+                }
             }
 
-            // Ativar "BOTE" quando fica próximo (z < 320)
-            if (defender.z < 320 && !defender.isLunging) {
-                defender.isLunging = true;
-                // Ajusta a lane do bote
-                defender.lane = Math.max(-1, Math.min(1, defender.lane + defender.lungeDir));
-            }
+            // ATUALIZAR E DESENHAR ZAGUEIROS
+            for (let i = defenders.length - 1; i >= 0; i--) {
+                const d = defenders[i];
 
-            // Projeção 3D -> 2D
-            const scale = fov / Math.max(10, defender.z);
-            const centerX = 200 + (defender.lane * 90 * scale);
-            const screenY = horizonY + (160 * scale);
-            const size = 70 * scale;
+                if (gameState === 'PLAYING') {
+                    const distToBall = Math.hypot(ball.x - d.x, ball.y - d.y);
 
-            if (defender.z > 10) {
-                ctx.save();
-                ctx.translate(centerX, screenY);
+                    if (d.state === 'APPROACH') {
+                        // Persegue a bola
+                        const angle = Math.atan2(ball.y - d.y, ball.x - d.x);
+                        d.x += Math.cos(angle) * d.speed;
+                        d.y += Math.sin(angle) * d.speed;
+
+                        // Se chegar a menos de 110px da bola, PREPARA O BOTE!
+                        if (distToBall < 110) {
+                            d.state = 'PREPARE_BOTE';
+                            d.targetBoteX = ball.x;
+                            d.targetBoteY = ball.y;
+                            d.timer = now;
+                        }
+                    } 
+                    else if (d.state === 'PREPARE_BOTE') {
+                        // Trava a mira por 0.35s (Aviso do bote)
+                        if (now - d.timer > 350) {
+                            d.state = 'LUNGING';
+                            const lungeAngle = Math.atan2(d.targetBoteX - d.y, d.targetBoteX - d.x);
+                            const speedLunge = 8.5; // Velocidade do bote / carrinho
+                            d.lungeVx = Math.cos(Math.atan2(d.targetBoteY - d.y, d.targetBoteX - d.x)) * speedLunge;
+                            d.lungeVy = Math.sin(Math.atan2(d.targetBoteY - d.y, d.targetBoteX - d.x)) * speedLunge;
+                            d.timer = now;
+                        }
+                    } 
+                    else if (d.state === 'LUNGING') {
+                        // Executa o carrinho / bote rápido
+                        d.x += d.lungeVx;
+                        d.y += d.lungeVy;
+
+                        if (now - d.timer > 250) {
+                            d.state = 'RECOVER';
+                            d.timer = now;
+                            
+                            // Se o zagueiro deu o bote e errou a bola: DRIBLE COMPUTADO!
+                            if (distToBall > ball.radius + d.radius + 10) {
+                                dribbleCount++;
+                                document.getElementById('hud-dribbles').innerText = dribbleCount;
+                                playSound('dodge');
+                            }
+                        }
+                    } 
+                    else if (d.state === 'RECOVER') {
+                        // Fica caído/recuperando por 0.8s
+                        if (now - d.timer > 800) {
+                            d.state = 'APPROACH';
+                        }
+                    }
+
+                    // Checagem de Colisão (Se o bote acertou a bola)
+                    if (distToBall < ball.radius + d.radius - 2) {
+                        gameOver();
+                    }
+                }
+
+                // DESENHO DO ZAGUEIRO
+                // Linha de Aviso do Bote (Telegrafado)
+                if (d.state === 'PREPARE_BOTE') {
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([6, 6]);
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y);
+                    ctx.lineTo(d.targetBoteX, d.targetBoteY);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
 
                 // Sombra do Zagueiro
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
                 ctx.beginPath();
-                ctx.ellipse(0, size * 0.9, size * 0.5, size * 0.15, 0, 0, Math.PI * 2);
+                ctx.ellipse(d.x, d.y + 12, d.radius, d.radius * 0.4, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Corpo / Camisa
-                ctx.fillStyle = defender.color;
+                // Corpo do Zagueiro (Vermelho no bote, azul na aproximação)
+                ctx.fillStyle = d.state === 'LUNGING' ? '#ef4444' : '#1e3a8a';
                 ctx.beginPath();
-                ctx.fillRect(-size * 0.35, -size * 0.8, size * 0.7, size * 0.6);
-
-                // Cabeça
-                ctx.fillStyle = '#fca5a5';
-                ctx.beginPath();
-                ctx.arc(0, -size * 0.95, size * 0.22, 0, Math.PI * 2);
+                ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Pernas / Animação do BOTE
-                ctx.strokeStyle = '#1e293b';
-                ctx.lineWidth = Math.max(2, size * 0.1);
+                // Camisa / Detalhe
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.radius * 0.4, 0, Math.PI * 2);
+                ctx.fill();
 
-                if (defender.isLunging) {
-                    // Perna esticada para dar o bote
-                    ctx.strokeStyle = '#e11d48'; // Destaque vermelho no bote
+                // Animação de Carrinho (Perna esticada)
+                if (d.state === 'LUNGING') {
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 6;
                     ctx.beginPath();
-                    ctx.moveTo(0, -size * 0.2);
-                    ctx.lineTo((defender.lungeDir * size * 0.6), size * 0.8); // Chute de desarme
-                    ctx.stroke();
-
-                    // Perna de apoio
-                    ctx.beginPath();
-                    ctx.moveTo(-defender.lungeDir * size * 0.2, -size * 0.2);
-                    ctx.lineTo(-defender.lungeDir * size * 0.3, size * 0.8);
-                    ctx.stroke();
-                } else {
-                    // Pernas normais correndo
-                    const legOffset = Math.sin(Date.now() * 0.02) * (size * 0.2);
-                    ctx.beginPath();
-                    ctx.moveTo(-size * 0.15, -size * 0.2);
-                    ctx.lineTo(-size * 0.2, size * 0.8 + legOffset);
-                    ctx.moveTo(size * 0.15, -size * 0.2);
-                    ctx.lineTo(size * 0.2, size * 0.8 - legOffset);
+                    ctx.moveTo(d.x, d.y);
+                    ctx.lineTo(d.x + d.lungeVx * 2.5, d.y + d.lungeVy * 2.5);
                     ctx.stroke();
                 }
 
-                ctx.restore();
-            }
-
-            // CHECAGEM DE COLISÃO DO BOTE (Momento exato do desarme)
-            if (defender.z < 60 && defender.z > -20 && gameState === 'PLAYING') {
-                if (defender.lane === targetLane) {
-                    gameOver("O zagueiro interceptou sua trajetória!");
-                } else {
-                    // Drible com Sucesso!
-                    dribbleCount++;
-                    gameSpeed += 0.4; // Aumenta o ritmo do jogo
-                    document.getElementById('hud-dribbles').innerText = dribbleCount;
-                    document.getElementById('hud-speed').innerText = `${Math.round(gameSpeed * 3)} km/h`;
-                    playSound('dribble');
-                    spawnDefender(); // Próximo zagueiro
+                // Remover zagueiros muito distantes fora do campo
+                if (d.x < -100 || d.x > canvas.width + 100 || d.y < -100 || d.y > canvas.height + 100) {
+                    defenders.splice(i, 1);
                 }
-            } else if (defender.z <= -20) {
-                spawnDefender(); // Respawn se passar direto
             }
-        }
 
-        // RENDERIZAR A BOLA E OS PÉS EM 1ª PESSOA (BOTTOM VIEW)
-        function drawFirstPersonPlayer() {
-            // Suavização do movimento horizontal da bola
-            const targetX = 200 + (targetLane * 95);
-            ballAnimX += (targetX - ballAnimX) * 0.25;
+            // DESENHAR PARTÍCULAS
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const pt = particles[i];
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                pt.life -= 0.05;
 
-            const ballY = 430;
-            const ballRadius = 24;
+                ctx.fillStyle = pt.color;
+                ctx.globalAlpha = Math.max(0, pt.life);
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
 
-            ctx.save();
+                if (pt.life <= 0) particles.splice(i, 1);
+            }
 
-            // Pés / Chuteira em 1ª pessoa (Surgindo do rodapé)
-            const legOffset = Math.sin(Date.now() * 0.015) * 8;
-            ctx.fillStyle = '#0f172a';
-            
-            // Chuteira Esquerda
-            ctx.beginPath();
-            ctx.ellipse(ballAnimX - 35, 475 + legOffset, 16, 28, -0.2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Chuteira Direita
-            ctx.beginPath();
-            ctx.ellipse(ballAnimX + 35, 475 - legOffset, 16, 28, 0.2, 0, Math.PI * 2);
-            ctx.fill();
-
+            // DESENHAR A BOLA (JOGADOR)
             // Sombra da Bola
             ctx.fillStyle = 'rgba(0,0,0,0.4)';
             ctx.beginPath();
-            ctx.ellipse(ballAnimX, ballY + 22, ballRadius * 0.8, 8, 0, 0, Math.PI * 2);
+            ctx.ellipse(ball.x, ball.y + 14, ball.radius, ball.radius * 0.4, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Bola de Futebol (Textura e Rotação)
+            // Esfera
+            ctx.save();
+            ctx.translate(ball.x, ball.y);
+            ctx.rotate(ball.rotation);
+
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(ballAnimX, ballY, ballRadius, 0, Math.PI * 2);
+            ctx.arc(0, 0, ball.radius, 0, Math.PI * 2);
             ctx.fill();
+
             ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1.5;
             ctx.stroke();
 
-            // Gomos Pretos da Bola (Animação de rotação conforme anda)
-            const rotation = (Date.now() * 0.01 * (gameSpeed / 8)) % (Math.PI * 2);
-            ctx.fillStyle = '#1e293b';
+            // Gomos da Bola
+            ctx.fillStyle = '#000000';
             ctx.beginPath();
-            ctx.arc(ballAnimX + Math.cos(rotation) * 8, ballY + Math.sin(rotation) * 8, 7, 0, Math.PI * 2);
+            ctx.arc(0, 0, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(8, -6, 3, 0, Math.PI * 2);
+            ctx.arc(-8, 6, 3, 0, Math.PI * 2);
             ctx.fill();
 
             ctx.restore();
-        }
-
-        // LOOP PRINCIPAL DE RENDERIZAÇÃO
-        function loop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            drawField();
-            drawDefender();
-            drawFirstPersonPlayer();
 
             if (gameState === 'PLAYING') {
                 animId = requestAnimationFrame(loop);
             }
         }
 
-        // Desenhar tela inicial parada
-        drawField();
-        drawFirstPersonPlayer();
+        // Desenhar campo estático no início
+        drawPitch();
     </script>
 </body>
 </html>
