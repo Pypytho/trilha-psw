@@ -18,6 +18,7 @@
             --bg-body: #faf9f6;
             --primary-black: #111111;
             --accent-gold: #c5a059;
+            --accent-gold-hover: #b08d48;
             --text-dark: #222222;
             --text-muted: #666666;
             --card-bg: #ffffff;
@@ -595,13 +596,13 @@
         }
 
         // =======================================================
-        // CONEXÃO ROBUSTA E DEFENSIVA COM O SERVIDOR REPLIT
+        // CONEXÃO COM A API PUBLICADA (.replit.app)
         // =======================================================
         async function processarPedido() {
             if (cart.length === 0) return alert('Adicione produtos ao carrinho!');
 
-            // ⚠️ ALTERE APENAS ESTA LINHA COM O LINK .replit.app PUBLICADO
-            const REPLIT_URL = "https://aura-and-luxo-backend--raphaeltelho.replit.app";
+            // URL Pública e definitiva de produção no Replit
+            const REPLIT_URL = "https://aura-and-luxo-backend--raphaeltelho.replit.app/api/checkout";
 
             const payload = {
                 cartItems: cart,
